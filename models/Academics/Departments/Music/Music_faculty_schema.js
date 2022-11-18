@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const Music_Faculty_Schema = mongoose.Schema(
+const Music_faculty_Schema = mongoose.Schema(
   {
     title: {
       type: String,
@@ -51,6 +51,6 @@ const Music_Faculty_Schema = mongoose.Schema(
   }
 );
 
-const Music_Faculty = mongoose.model('Music_Faculty', Music_Faculty_Schema);
+const Music_Faculty = mongoose.model('Music_Faculty', Music_faculty_Schema);
 
 module.exports = Music_Faculty;
