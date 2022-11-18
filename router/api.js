@@ -55,7 +55,7 @@ const Scholarship = require("../models/StudentZone/Scholarship_Schema");
 const Student_Examform = require("../models/StudentZone/StudentZone_Examform_Schema");
 const Student_Feepayment = require("../models/StudentZone/StudentZone_Feepayment_Schema");
 const Student_Internal = require("../models/StudentZone/StudentZone_Internal_Schema");
-const Antiragg = require("../models/StudentZone/Antiragg_Schema");
+// const Antiragg = require("../models/StudentZone/Antiragg_Schema");
 const Ethics = require("../models/StaffZone/Ethics_Schema");
 const Student_Notice = require("../models/Notices/Student_Notice_Schema");
 const Staff_Notice = require("../models/Notices/Staff_Notice_Schema");
@@ -100,7 +100,7 @@ const Music_Student_Achieve = require("../models/Academics/Departments/Music/Mus
 const NHE_Student_Achieve = require("../models/Academics/Departments/NHE/NHE_StuAch_Schema");
 const Philo_Student_Achieve = require("../models/Academics/Departments/Philosophy/Philo_StuAch_Schema");
 const Philo_Association = require("../models/Academics/Departments/Philosophy/Philo_Association_Schema");
-const Philo_Publications = require("../models/Academics/Departments/Philosophy/Philo_Publications_Schema");
+// const Philo_Publications = require("../models/Academics/Departments/Philosophy/Philo_Publications_Schema");
 const Psycho_Publications = require("../models/Academics/Departments/Psychology/Psycho_Publications_Schema");
 const PE_Student_Achieve = require("../models/Academics/Departments/Physical_Education/PE_StuAch_Schema");
 const Phy_Student_Achieve = require("../models/Academics/Departments/Physics/Physics_Stuachieve_Schema");
@@ -18135,71 +18135,71 @@ router.post(
 
 // Student-Zone Antiragging
 
-router.get("/Antiragg", async (req, res) => {
-    const details = await Antiragg.find();
-    res.status(200).json(details);
-});
-router.delete("/delete_Antiragg/:id", async (req, res) => {
-    const delete_user = await Antiragg.findOneAndDelete({
-        _id: req.params.id,
-    });
-    if (delete_user.file_mimetype === "text/link") {
-        console.log(delete_user.file_mimetype);
-        res.status(200).json(delete_user + "User deleted");
-    } else {
-        console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
-        res.status(200).json(delete_user + "User deleted");
-    }
-});
-router.post("/Antiragg_add_link", async (req, res) => {
-    try {
-        ;
-        const { file, link, title } = req.body;
-        if (!title || !link || !file) {
-            return res
-                .status(400)
-                .json({ error: "Fill the Admission Details Properly" });
-        }
-        const user = new Antiragg({
-            title,
-            link,
-            file_path: file,
-            file_mimetype: "text/link",
-        });
-        await user.save();
-        res.status(200).json("file uploaded successfully.");
+// router.get("/Antiragg", async (req, res) => {
+//     const details = await Antiragg.find();
+//     res.status(200).json(details);
+// });
+// router.delete("/delete_Antiragg/:id", async (req, res) => {
+//     const delete_user = await Antiragg.findOneAndDelete({
+//         _id: req.params.id,
+//     });
+//     if (delete_user.file_mimetype === "text/link") {
+//         console.log(delete_user.file_mimetype);
+//         res.status(200).json(delete_user + "User deleted");
+//     } else {
+//         console.log(delete_user.file_mimetype);
+//         await unlinkAsync(delete_user.file_path);
+//         res.status(200).json(delete_user + "User deleted");
+//     }
+// });
+// router.post("/Antiragg_add_link", async (req, res) => {
+//     try {
+//         ;
+//         const { file, link, title } = req.body;
+//         if (!title || !link || !file) {
+//             return res
+//                 .status(400)
+//                 .json({ error: "Fill the Admission Details Properly" });
+//         }
+//         const user = new Antiragg({
+//             title,
+//             link,
+//             file_path: file,
+//             file_mimetype: "text/link",
+//         });
+//         await user.save();
+//         res.status(200).json("file uploaded successfully.");
 
 
-    } catch (err) {
-        console.log(err);
-    }
-});
-router.post(
-    "/Antiragg_add",
-    upload.single("file"),
-    async (req, res) => {
-        try {
-            const { title, link } = req.body;
-            const { path, mimetype } = req.file;
-            const file = new Antiragg({
-                title,
-                link,
-                file_path: path,
-                file_mimetype: mimetype,
-            });
-            await file.save();
-            res.send("file uploaded successfully.");
-        } catch (error) {
-            res.status(400).send("Error while uploading file. Try again later.");
-        }
-    },
-    (error, req, res, next) => {
-        if (error) {
-            res.status(402).send(error.message);
-        }
-    }
-);
+//     } catch (err) {
+//         console.log(err);
+//     }
+// });
+// router.post(
+//     "/Antiragg_add",
+//     upload.single("file"),
+//     async (req, res) => {
+//         try {
+//             const { title, link } = req.body;
+//             const { path, mimetype } = req.file;
+//             const file = new Antiragg({
+//                 title,
+//                 link,
+//                 file_path: path,
+//                 file_mimetype: mimetype,
+//             });
+//             await file.save();
+//             res.send("file uploaded successfully.");
+//         } catch (error) {
+//             res.status(400).send("Error while uploading file. Try again later.");
+//         }
+//     },
+//     (error, req, res, next) => {
+//         if (error) {
+//             res.status(402).send(error.message);
+//         }
+//     }
+// );
 
 
 // Teacher-In Charge
@@ -18980,225 +18980,225 @@ router.get("/Resource_center_download/:id", async (req, res) => {
     }
 });
 // Philosophy Publication
-router.post("/delete_Philo_Publications/:id", async (req, res) => {
-    const delete_user = await Philo_Publications.findOne({ _id: req.params.id });
-    const arr = delete_user.img_data.file_path;
-    if (arr.length === 0) {
-        await delete_user.deleteOne({ _id: req.params.id });
-        // console.log(delete_user.img_data.file_path)
-        res.status(200).json(delete_user + "User deleted");
-    } else {
-        res.status(400).json("First Delete all the images related to this section");
-    }
-});
-router.post("/delete_img_Philo_Publications_fac/:id", async (req, res) => {
-    // console.log(req.body.file_path1)
-    const delete_user = await Philo_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
-    res.status(200).json(delete_user + "User deleted");
-});
+// router.post("/delete_Philo_Publications/:id", async (req, res) => {
+//     const delete_user = await Philo_Publications.findOne({ _id: req.params.id });
+//     const arr = delete_user.img_data.file_path;
+//     if (arr.length === 0) {
+//         await delete_user.deleteOne({ _id: req.params.id });
+//         // console.log(delete_user.img_data.file_path)
+//         res.status(200).json(delete_user + "User deleted");
+//     } else {
+//         res.status(400).json("First Delete all the images related to this section");
+//     }
+// });
+// router.post("/delete_img_Philo_Publications_fac/:id", async (req, res) => {
+//     // console.log(req.body.file_path1)
+//     const delete_user = await Philo_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
+//     await unlinkAsync(req.body.file_path1);
+//     res.status(200).json(delete_user + "User deleted");
+// });
 
-router.post("/delete_pdf_link_Philo_Publications_fac/:id", async (req, res) => {
-    const delete_user = await Philo_Publications.findOneAndUpdate({ _id: req.params.id }, {
-        $set: {
-            "img_data.pdf_path": {
-                pdf_path1: "../daulatram/public/images/uploads",
-                pdf_mimetype1: null,
-                value: null,
-            },
-        },
-    });
-    const pdf = delete_user.img_data.pdf_path;
+// router.post("/delete_pdf_link_Philo_Publications_fac/:id", async (req, res) => {
+//     const delete_user = await Philo_Publications.findOneAndUpdate({ _id: req.params.id }, {
+//         $set: {
+//             "img_data.pdf_path": {
+//                 pdf_path1: "../daulatram/public/images/uploads",
+//                 pdf_mimetype1: null,
+//                 value: null,
+//             },
+//         },
+//     });
+//     const pdf = delete_user.img_data.pdf_path;
 
-    if (pdf[0].pdf_mimetype1 !== "text/link") {
-        console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
-        res.status(200).json(delete_user + "User deleted");
-    } else {
-        console.log(pdf[0].pdf_mimetype1);
-        res.status(200).json(delete_user + "User deleted");
-    }
-});
+//     if (pdf[0].pdf_mimetype1 !== "text/link") {
+//         console.log(pdf[0].pdf_mimetype1);
+//         await unlinkAsync(pdf[0].pdf_path1);
+//         res.status(200).json(delete_user + "User deleted");
+//     } else {
+//         console.log(pdf[0].pdf_mimetype1);
+//         res.status(200).json(delete_user + "User deleted");
+//     }
+// });
 
-router.post("/delete_Philo_Publications_para/:id", async (req, res) => {
-    try {
-        const { pid, type } = req.body;
-        if (type === "para") {
-            const delete_user = await Philo_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.para": { _id: pid } } });
-            res.status(200).json(delete_user + "User deleted");
-        } else {
-            const delete_user = await Philo_Student_Achieve.findOneAndDelete({
-                _id: req.params.id,
-            });
-            const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
-            res.status(202).json(delete_user + "User deleted");
-        }
-    } catch (error) {
-        console.log(error);
-    }
-});
-
-
-router.get("/Philo_Publications", async (req, res) => {
-    try {
-        const files = await Philo_Publications.find({});
-        const sortedByCreationDate = files.sort(
-            (a, b) => b.createdAt - a.createdAt
-        );
-        res.send(sortedByCreationDate);
-    } catch (error) {
-        res.status(400).send("Error while getting list of files. Try again later.");
-    }
-});
+// router.post("/delete_Philo_Publications_para/:id", async (req, res) => {
+//     try {
+//         const { pid, type } = req.body;
+//         if (type === "para") {
+//             const delete_user = await Philo_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.para": { _id: pid } } });
+//             res.status(200).json(delete_user + "User deleted");
+//         } else {
+//             const delete_user = await Philo_Student_Achieve.findOneAndDelete({
+//                 _id: req.params.id,
+//             });
+//             const img = delete_user.img_data.file_path;
+//             await unlinkAsync(img[0].file_path1);
+//             res.status(202).json(delete_user + "User deleted");
+//         }
+//     } catch (error) {
+//         console.log(error);
+//     }
+// });
 
 
-router.post(
-    "/Philo_Publications_add_para/:id",
-    async (req, res) => {
-        try {
-            const { para1 } = req.body;
-            await Philo_Publications.findOneAndUpdate({ _id: req.params.id }, { $push: { "img_data.para": { para1: para1 } } });
-            res.status(200).send("file uploaded successfully.");
-        } catch (error) {
-            // console.log(error)
-            res.status(400).send("Error while uploading file. Try again later.");
-        }
-    },
-    (error, req, res, next) => {
-        if (error) {
-            res.status(402).send(error.message);
-        }
-    }
-);
+// router.get("/Philo_Publications", async (req, res) => {
+//     try {
+//         const files = await Philo_Publications.find({});
+//         const sortedByCreationDate = files.sort(
+//             (a, b) => b.createdAt - a.createdAt
+//         );
+//         res.send(sortedByCreationDate);
+//     } catch (error) {
+//         res.status(400).send("Error while getting list of files. Try again later.");
+//     }
+// });
 
 
-router.post(
-    "/Philo_Publications_file_upload/:id",
-    upload.single("file"),
-    async (req, res) => {
-        try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
-            const data = await Philo_Publications.findOneAndUpdate({ _id: req.params.id }, {
-                $set: {
-                    "img_data.pdf_path": {
-                        pdf_path1: path,
-                        pdf_mimetype1: mimetype,
-                        value: true,
-                    },
-                },
-            });
-            if (data) {
-                // console.log(dat)
-                res.status(200).send("file uploaded successfully.");
-            } else {
-                res.status(401).send("Unable to upload CV, No data found");
-            }
-            // console.log(dat)
-        } catch (error) {
-            console.log(error);
-            res.status(402).send("Error while uploading file. Try again later.");
-        }
-    }
-);
-router.post("/Philo_Publications_add_link/:id", async (req, res) => {
-    try {
-        const { link } = req.body;
-
-        if (!link) {
-            return res
-                .status(400)
-                .json({ error: "Fill the Admission Details Properly" });
-        }
-
-        const data = await Philo_Publications.findOneAndUpdate({ _id: req.params.id }, {
-            $set: {
-                "img_data.pdf_path": {
-                    pdf_path1: link,
-                    pdf_mimetype1: "text/link",
-                    value: true,
-                },
-            },
-        });
-        if (data) {
-            // console.log(dat)
-            res.status(200).send("file uploaded successfully.");
-        } else {
-            res.status(401).send("Unable to update link, No data found");
-        }
+// router.post(
+//     "/Philo_Publications_add_para/:id",
+//     async (req, res) => {
+//         try {
+//             const { para1 } = req.body;
+//             await Philo_Publications.findOneAndUpdate({ _id: req.params.id }, { $push: { "img_data.para": { para1: para1 } } });
+//             res.status(200).send("file uploaded successfully.");
+//         } catch (error) {
+//             // console.log(error)
+//             res.status(400).send("Error while uploading file. Try again later.");
+//         }
+//     },
+//     (error, req, res, next) => {
+//         if (error) {
+//             res.status(402).send(error.message);
+//         }
+//     }
+// );
 
 
-    } catch (err) {
-        console.log(err);
-    }
-});
+// router.post(
+//     "/Philo_Publications_file_upload/:id",
+//     upload.single("file"),
+//     async (req, res) => {
+//         try {
+//             const { path, mimetype } = req.file;
+//             // console.log(path, mimetype)
+//             const data = await Philo_Publications.findOneAndUpdate({ _id: req.params.id }, {
+//                 $set: {
+//                     "img_data.pdf_path": {
+//                         pdf_path1: path,
+//                         pdf_mimetype1: mimetype,
+//                         value: true,
+//                     },
+//                 },
+//             });
+//             if (data) {
+//                 // console.log(dat)
+//                 res.status(200).send("file uploaded successfully.");
+//             } else {
+//                 res.status(401).send("Unable to upload CV, No data found");
+//             }
+//             // console.log(dat)
+//         } catch (error) {
+//             console.log(error);
+//             res.status(402).send("Error while uploading file. Try again later.");
+//         }
+//     }
+// );
+// router.post("/Philo_Publications_add_link/:id", async (req, res) => {
+//     try {
+//         const { link } = req.body;
 
-router.post("/Philo_Publications_upload", async (req, res) => {
-    try {
-        // 
-        const { title, description } = req.body;
-        const file = new Philo_Publications({
-            title: title,
-            description: description,
-            "img_data.pdf_path": { value: false },
+//         if (!link) {
+//             return res
+//                 .status(400)
+//                 .json({ error: "Fill the Admission Details Properly" });
+//         }
 
-        });
-        await file.save();
-        res.send("file uploaded successfully.");
-    } catch (error) {
-        // console.log(error)
-        res.status(400).send("Error occur while uploading data");
-    }
-});
-router.post(
-    "/Philo_Publications_img_upload/:id",
-    upload.single("file"),
-    async (req, res) => {
-        try {
-            const { path, mimetype } = req.file;
-            const dat = await Philo_Publications.findOne({ _id: req.params.id })
-            const arr = dat.img_data.file_path;
-            if (arr.length <= 4) {
-                const data = await Philo_Publications.findOneAndUpdate({ _id: req.params.id }, {
-                    $push: {
-                        "img_data.file_path": {
-                            file_path1: path,
-                            file_mimetype1: mimetype,
-                        },
-                    },
-                });
-                // console.log(dat)
-                if (data) {
-                    res.status(200).send("file uploaded successfully.");
-                }
-            } else {
-                await unlinkAsync(path);
-                res.status(402).send("Delete previous Images there is only a limit of 6 images");
-            }
-        } catch (error) {
-            console.log(error)
-            res.status(400).send("Error while uploading file. Try again later.");
-        }
-    },
-    (error, req, res, next) => {
-        if (error) {
-            res.status(402).send(error.message);
-        }
-    }
-);
+//         const data = await Philo_Publications.findOneAndUpdate({ _id: req.params.id }, {
+//             $set: {
+//                 "img_data.pdf_path": {
+//                     pdf_path1: link,
+//                     pdf_mimetype1: "text/link",
+//                     value: true,
+//                 },
+//             },
+//         });
+//         if (data) {
+//             // console.log(dat)
+//             res.status(200).send("file uploaded successfully.");
+//         } else {
+//             res.status(401).send("Unable to update link, No data found");
+//         }
 
-router.get("/Philo_Publications_download/:id", async (req, res) => {
-    try {
-        const file = await Philo_Publications.findById(req.params.id);
-        res.set({
-            "Content-Type": file.file_mimetype,
-        });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
-    } catch (error) {
-        res.status(400).send("Error while downloading file. Try again later.");
-    }
-});
+
+//     } catch (err) {
+//         console.log(err);
+//     }
+// });
+
+// router.post("/Philo_Publications_upload", async (req, res) => {
+//     try {
+//         // 
+//         const { title, description } = req.body;
+//         const file = new Philo_Publications({
+//             title: title,
+//             description: description,
+//             "img_data.pdf_path": { value: false },
+
+//         });
+//         await file.save();
+//         res.send("file uploaded successfully.");
+//     } catch (error) {
+//         // console.log(error)
+//         res.status(400).send("Error occur while uploading data");
+//     }
+// });
+// router.post(
+//     "/Philo_Publications_img_upload/:id",
+//     upload.single("file"),
+//     async (req, res) => {
+//         try {
+//             const { path, mimetype } = req.file;
+//             const dat = await Philo_Publications.findOne({ _id: req.params.id })
+//             const arr = dat.img_data.file_path;
+//             if (arr.length <= 4) {
+//                 const data = await Philo_Publications.findOneAndUpdate({ _id: req.params.id }, {
+//                     $push: {
+//                         "img_data.file_path": {
+//                             file_path1: path,
+//                             file_mimetype1: mimetype,
+//                         },
+//                     },
+//                 });
+//                 // console.log(dat)
+//                 if (data) {
+//                     res.status(200).send("file uploaded successfully.");
+//                 }
+//             } else {
+//                 await unlinkAsync(path);
+//                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
+//             }
+//         } catch (error) {
+//             console.log(error)
+//             res.status(400).send("Error while uploading file. Try again later.");
+//         }
+//     },
+//     (error, req, res, next) => {
+//         if (error) {
+//             res.status(402).send(error.message);
+//         }
+//     }
+// );
+
+// router.get("/Philo_Publications_download/:id", async (req, res) => {
+//     try {
+//         const file = await Philo_Publications.findById(req.params.id);
+//         res.set({
+//             "Content-Type": file.file_mimetype,
+//         });
+//         res.sendFile(path.join(__dirname, "..", file.file_path));
+//     } catch (error) {
+//         res.status(400).send("Error while downloading file. Try again later.");
+//     }
+// });
 
 
 // Biochemistry Publications
