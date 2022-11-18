@@ -8,9 +8,9 @@ const app = express();
 dotenv.config({ path: './config.env' })
 require('./db/conn')
 app.use(express.json());
-app.use(bodyParser.urlencoded(
-  { extended: true }
-))
+// app.use(bodyParser.urlencoded(
+//   { extended: true }
+// ))
 
 app.use(cors());
 app.use(express.json());
