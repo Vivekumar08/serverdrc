@@ -16,7 +16,6 @@ app.use(cors());
 app.use(express.json());
 app.set("view engine", "ejs")
 
-require('./models/adminSchema');
 
 app.get("/",(req,res)=>{
   res.json("Server Deployed")
