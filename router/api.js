@@ -55,7 +55,7 @@ const Scholarship = require("../models/StudentZone/Scholarship_Schema");
 const Student_Examform = require("../models/StudentZone/StudentZone_Examform_Schema");
 const Student_Feepayment = require("../models/StudentZone/StudentZone_Feepayment_Schema");
 const Student_Internal = require("../models/StudentZone/StudentZone_Internal_Schema");
-// const Antiragg = require("../models/StudentZone/Antiragg_Schema");
+const Antiragg = require("../models/StudentZone/Antiragg_Schema");
 const Ethics = require("../models/StaffZone/Ethics_Schema");
 const Student_Notice = require("../models/Notices/Student_Notice_Schema");
 const Staff_Notice = require("../models/Notices/Staff_Notice_Schema");
@@ -15057,78 +15057,78 @@ router.post(
         }
     }
 );
-// Ragging
+// // Ragging
 
-router.get("/Anti_Ragging", async (req, res) => {
-    const details = await Ragging.find();
-    if (details.length === 0) {
-        res.status(200).json(false);
-    } else {
-        res.status(200).json(details);
-    }
-});
-router.delete("/deleteAntiRagging/:id", async (req, res) => {
-    try {
-        const delete_user = await Ragging.findOneAndDelete({ _id: req.params.id });
-        if (delete_user.file_mimetype === "text/link") {
-            console.log(delete_user.file_mimetype);
-            res.status(200).json(delete_user + "User deleted");
-        } else {
-            console.log(delete_user.file_mimetype);
-            await unlinkAsync(delete_user.file_path);
-            res.status(200).json(delete_user + "User deleted");
-        }
-    } catch (err) {
-        console.log(err);
-    }
-});
-router.post("/AntiRagging_add_link", async (req, res) => {
-    try {
-        ;
-        const { file, link, title } = req.body;
-        if (!title || !link || !file) {
-            return res
-                .status(400)
-                .json({ error: "Fill the Admission Details Properly" });
-        }
-        const user = new Ragging({
-            title,
-            link,
-            file_path: file,
-            file_mimetype: "text/link",
-        });
-        await user.save();
+// router.get("/Anti_Ragging", async (req, res) => {
+//     const details = await Ragging.find();
+//     if (details.length === 0) {
+//         res.status(200).json(false);
+//     } else {
+//         res.status(200).json(details);
+//     }
+// });
+// router.delete("/deleteAntiRagging/:id", async (req, res) => {
+//     try {
+//         const delete_user = await Ragging.findOneAndDelete({ _id: req.params.id });
+//         if (delete_user.file_mimetype === "text/link") {
+//             console.log(delete_user.file_mimetype);
+//             res.status(200).json(delete_user + "User deleted");
+//         } else {
+//             console.log(delete_user.file_mimetype);
+//             await unlinkAsync(delete_user.file_path);
+//             res.status(200).json(delete_user + "User deleted");
+//         }
+//     } catch (err) {
+//         console.log(err);
+//     }
+// });
+// router.post("/AntiRagging_add_link", async (req, res) => {
+//     try {
+//         ;
+//         const { file, link, title } = req.body;
+//         if (!title || !link || !file) {
+//             return res
+//                 .status(400)
+//                 .json({ error: "Fill the Admission Details Properly" });
+//         }
+//         const user = new Ragging({
+//             title,
+//             link,
+//             file_path: file,
+//             file_mimetype: "text/link",
+//         });
+//         await user.save();
 
 
-    } catch (err) {
-        console.log(err);
-    }
-});
-router.post(
-    "/admission_Anti_Ragging",
-    upload.single("file"),
-    async (req, res) => {
-        try {
-            const { title, link } = req.body;
-            const { path, mimetype } = req.file;
-            const file = new Ragging({
-                title,
-                link,
-                file_path: path,
-                file_mimetype: mimetype,
-            });
-            await file.save();
-            res.send("file uploaded successfully.");
-        } catch (error) {
-            res.status(400).send("Error while uploading file. Try again later.");
-        }
-    },
-    (error, req, res, next) => {
-        if (error) {
-            res.status(402).send(error.message);
-        }
-    }
-);
+//     } catch (err) {
+//         console.log(err);
+//     }
+// });
+// router.post(
+//     "/admission_Anti_Ragging",
+//     upload.single("file"),
+//     async (req, res) => {
+//         try {
+//             const { title, link } = req.body;
+//             const { path, mimetype } = req.file;
+//             const file = new Ragging({
+//                 title,
+//                 link,
+//                 file_path: path,
+//                 file_mimetype: mimetype,
+//             });
+//             await file.save();
+//             res.send("file uploaded successfully.");
+//         } catch (error) {
+//             res.status(400).send("Error while uploading file. Try again later.");
+//         }
+//     },
+//     (error, req, res, next) => {
+//         if (error) {
+//             res.status(402).send(error.message);
+//         }
+//     }
+// );
 // Biochemistry Photo Gallery
 router.get("/Bio_Photo_Gallery", async (req, res) => {
     const details = await Bio_Photo_Gallery.find();
