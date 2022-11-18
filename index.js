@@ -14,7 +14,7 @@ app.use(bodyParser.urlencoded(
 
 app.use(cors());
 app.use(express.json());
-app.set("view engine", "ejs")
+// app.set("view engine", "ejs")
 
 
 app.get("/",(req,res)=>{
