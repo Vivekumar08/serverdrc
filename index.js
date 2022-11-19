@@ -18,7 +18,7 @@ app.use(express.json());
 
 
 app.get("/",async(req,res)=>{
-  res.json("Daulatram Server Deployed with Admission section")
+  res.json("Daulatram Server Deployed with Footer, Library, and, Notices sections")
 })
 
 app.use(require('./router/api'));

@@ -54,6 +54,23 @@ const IQAC = require("../models/Events&Activities/IQAC_schema")
 const Studentact = require("../models/Events&Activities/Studentact_schema")
 const Vidyavistar = require("../models/Events&Activities/Vidyavistar_schema")
 
+// Footer files
+const Anti_harassment = require("../models/Footer/Anti_harassment_Schema")
+const Job_Opportunities = require("../models/Footer/Job_Opportunities_Schema")
+const Job = require("../models/Footer/Job_schema")
+const RTI_Footer = require("../models/Footer/RTI_Footer_Schema")
+const Tender_Footer = require("../models/Footer/Tender_Schema")
+
+// Library files
+const Library = require("../models/Library/Library_Schema")
+
+// Notices files
+const Student_Notice = require("../models/Notices/Student_Notice_Schema")
+const Staff_Notice = require("../models/Notices/Staff_Notice_Schema")
+const Public_Notice = require("../models/Notices/Public_Notice_Schema")
+const Bulletins_Notice = require("../models/Notices/Bulletin_Schema")
+const Archives_Notice = require("../models/Notices/Archives_Notice_Schema")
+
 
 // SET STORAGE
 const storage = multer.diskStorage({
