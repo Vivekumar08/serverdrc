@@ -71,6 +71,42 @@ const Public_Notice = require("../models/Notices/Public_Notice_Schema")
 const Bulletins_Notice = require("../models/Notices/Bulletin_Schema")
 const Archives_Notice = require("../models/Notices/Archives_Notice_Schema")
 
+// Research files
+const File = require("../models/Research/Research_fac_Schema")
+const Publications = require("../models/Research/Publications_Schema")
+const Magz_and_News = require("../models/Research/Magz_and_News_Schema")
+
+// Societies files
+const Soc = require("../models/Societies/Societies_Schema")
+
+// StaffZone files
+const Feedback = require("../models/StaffZone/Feedback_Form_Schema")
+const Roster = require("../models/StaffZone/Roster_Schema")
+const Ethics = require("../models/StaffZone/Ethics_Schema")
+const Staff_Forms = require("../models/StaffZone/Staff_Forms_Schema")
+const Staff_Council_Comm = require("../models/StaffZone/Staff_Council_Comm_Schema")
+const Senior_list = require("../models/StaffZone/Senior_list_Schema")
+
+// StudentZone files
+const Icc = require("../models/StudentZone/ICC_Schema")
+const Eresources = require("../models/StudentZone/eResources_Schema")
+const Student_Facilities = require("../models/StudentZone/Student_Facilities_Schema")
+const Student_forms = require("../models/StudentZone/StudentZone_foms_Schema")
+const Scholarship = require("../models/StudentZone/Scholarship_Schema")
+const Student_Examform = require("../models/StudentZone/StudentZone_Examform_Schema")
+const Student_Feepayment = require("../models/StudentZone/StudentZone_Feepayment_Schema")
+const Student_Internal = require("../models/StudentZone/StudentZone_Internal_Schema")
+const Antiragg = require("../models/StudentZone/Antiragg_Schema")
+const Student_Grievance = require("../models/StudentZone/Student_Grievance_Schema")
+const Student_union = require("../models/StudentZone/Student_union_Schema")
+const Placement_cell = require("../models/StudentZone/Placement_cell_Schema")
+const Stud_Hostel = require("../models/StudentZone/Stud_Hostel_Schema") 
+const Equal_opp = require("../models/StudentZone/Equal_opp_Schema")
+const Complaints = require("../models/StudentZone/Complaints_schema") 
+
+// Other files
+const Events_and_Activities = require("../models/Events_and_Activities_Schema")
+const Useful_Links = require("../models/Useful_Links_schema")
 
 // SET STORAGE
 const storage = multer.diskStorage({
