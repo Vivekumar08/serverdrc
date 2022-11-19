@@ -11,9 +11,22 @@ const url = require("url");
 require("dotenv").config();
 const nodemailer = require("nodemailer");
 
+const unlinkAsync = promisify(fs.unlink);
+
+// Admin 
 const User = require("../models/adminSchema");
 
-const unlinkAsync = promisify(fs.unlink);
+// About Us files
+const Founder = require("../models/About_Us/Founder_Schema")
+const Chairperson = require("../models/About_Us/Chairperson_Schema")
+const Mission = require("../models/About_Us/Mission_Schema")
+const Principal = require("../models/About_Us/Principal_Schema")
+const VicePrincipal = require("../models/About_Us/VicePrincipal_Schema")
+const Gallery_About = require("../models/About_Us/Gallery_About_Schema")
+const About_Administration = require("../models/About_Us/About_Administration_Schema")
+
+// Academics files
+
 
 // SET STORAGE
 const storage = multer.diskStorage({
@@ -222,5 +235,647 @@ router.delete("/delete/:id", async (req, res) => {
     const delete_user = await User.findOneAndDelete({ _id: req.params.id });
     res.send(delete_user + "User deleted");
 });
+
+// About Us Founder
+
+router.get("/Founder_About", async (req, res) => {
+    const details = await Founder.find();
+    if (details.length === 0) {
+        res.status(200).json(false);
+    } else {
+        res.status(200).json(details);
+    }
+});
+
+router.post("/delete_Founder_About_data/:id", async (req, res) => {
+    try {
+        const { pid, type } = req.body;
+        if (type === "para") {
+            const delete_user = await Founder.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.para": { _id: pid } } });
+            res.status(200).json(delete_user + "User deleted");
+        } else {
+            const delete_user = await Founder.findOneAndDelete({
+                _id: req.params.id,
+            });
+            const img = delete_user.img_data.file_path;
+            await unlinkAsync(img[0].file_path1);
+            res.status(202).json(delete_user + "User deleted");
+        }
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+router.post(
+    "/Founder_About_add_data/:id",
+    async (req, res) => {
+        try {
+            const { para1 } = req.body;
+            await Founder.findOneAndUpdate({ _id: req.params.id }, { $push: { "img_data.para": { para1: para1 } } });
+            res.status(200).send("file uploaded successfully.");
+        } catch (error) {
+            // console.log(error)
+            res.status(400).send("Error while uploading file. Try again later.");
+        }
+    },
+    (error, req, res, next) => {
+        if (error) {
+            res.status(402).send(error.message);
+        }
+    }
+);
+
+router.post(
+    "/Founder_About_add",
+    upload.single("file"),
+    async (req, res) => {
+        try {
+            // ;
+            const file = new Founder({
+                "img_data.file_path": {
+                    file_path1: req.file.path,
+                    file_mimetype1: req.file.mimetype,
+                    value: false,
+                },
+            });
+            await file.save();
+            res.status(200).send("file uploaded successfully.");
+        } catch (error) {
+            console.log(error);
+            res.status(400).send("Error while uploading file. Try again later.");
+        }
+    },
+    (error, req, res, next) => {
+        if (error) {
+            res.status(402).send(error.message);
+        }
+    }
+);
+// About Us Chairperson
+
+router.get("/Chairperson_About", async (req, res) => {
+    const details = await Chairperson.find();
+    if (details.length === 0) {
+        res.status(200).json(false);
+    } else {
+        res.status(200).json(details);
+    }
+});
+
+router.post("/delete_Chairperson_About_data/:id", async (req, res) => {
+    try {
+        const { pid, type } = req.body;
+        if (type === "para") {
+            const delete_user = await Chairperson.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.para": { _id: pid } } });
+            res.status(200).json(delete_user + "User deleted");
+        } else {
+            const delete_user = await Chairperson.findOneAndDelete({
+                _id: req.params.id,
+            });
+            const img = delete_user.img_data.file_path;
+            await unlinkAsync(img[0].file_path1);
+            res.status(202).json(delete_user + "User deleted");
+        }
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+router.post(
+    "/Chairperson_About_add_data/:id",
+    async (req, res) => {
+        try {
+            const { para1 } = req.body;
+            await Chairperson.findOneAndUpdate({ _id: req.params.id }, { $push: { "img_data.para": { para1: para1 } } });
+            res.status(200).send("file uploaded successfully.");
+        } catch (error) {
+            // console.log(error)
+            res.status(400).send("Error while uploading file. Try again later.");
+        }
+    },
+    (error, req, res, next) => {
+        if (error) {
+            res.status(402).send(error.message);
+        }
+    }
+);
+
+router.post(
+    "/Chairperson_About_add",
+    upload.single("file"),
+    async (req, res) => {
+        try {
+            // ;
+            const file = new Chairperson({
+                "img_data.file_path": {
+                    file_path1: req.file.path,
+                    file_mimetype1: req.file.mimetype,
+                    value: false,
+                },
+            });
+            await file.save();
+            res.status(200).send("file uploaded successfully.");
+        } catch (error) {
+            console.log(error);
+            res.status(400).send("Error while uploading file. Try again later.");
+        }
+    },
+    (error, req, res, next) => {
+        if (error) {
+            res.status(402).send(error.message);
+        }
+    }
+);
+// About Us College Profile Mission and Vision
+
+router.get("/Mission_About", async (req, res) => {
+    const details = await Mission.find();
+    if (details.length === 0) {
+        res.status(200).json(false);
+    } else {
+        res.status(200).json(details);
+    }
+});
+
+router.post("/delete_Mission_About_data/:id", async (req, res) => {
+    try {
+        const { pid, type } = req.body;
+        if (type === "para") {
+            const delete_user = await Mission.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.para": { _id: pid } } });
+            res.status(200).json(delete_user + "User deleted");
+        } else {
+            const delete_user = await Mission.findOneAndDelete({
+                _id: req.params.id,
+            });
+            const img = delete_user.img_data.file_path;
+            await unlinkAsync(img[0].file_path1);
+            res.status(202).json(delete_user + "User deleted");
+        }
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+router.post(
+    "/Mission_About_add_data/:id",
+    async (req, res) => {
+        try {
+            const { para1 } = req.body;
+            await Mission.findOneAndUpdate({ _id: req.params.id }, { $push: { "img_data.para": { para1: para1 } } });
+            res.status(200).send("file uploaded successfully.");
+        } catch (error) {
+            // console.log(error)
+            res.status(400).send("Error while uploading file. Try again later.");
+        }
+    },
+    (error, req, res, next) => {
+        if (error) {
+            res.status(402).send(error.message);
+        }
+    }
+);
+
+router.post(
+    "/Mission_About_add",
+    upload.single("file"),
+    async (req, res) => {
+        try {
+            // ;
+            const file = new Mission({
+                "img_data.file_path": {
+                    file_path1: req.file.path,
+                    file_mimetype1: req.file.mimetype,
+                    value: false,
+                },
+            });
+            await file.save();
+            res.status(200).send("file uploaded successfully.");
+        } catch (error) {
+            console.log(error);
+            res.status(400).send("Error while uploading file. Try again later.");
+        }
+    },
+    (error, req, res, next) => {
+        if (error) {
+            res.status(402).send(error.message);
+        }
+    }
+);
+// About Us Principal
+
+router.get("/Principal_About", async (req, res) => {
+    const details = await Principal.find();
+    if (details.length === 0) {
+        res.status(200).json(false);
+    } else {
+        res.status(200).json(details);
+    }
+});
+
+router.post("/delete_Principal_About_data/:id", async (req, res) => {
+    try {
+        const { pid, type } = req.body;
+        if (type === "para") {
+            const delete_user = await Principal.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.para": { _id: pid } } });
+            res.status(200).json(delete_user + "User deleted");
+        } else {
+            const delete_user = await Principal.findOneAndDelete({
+                _id: req.params.id,
+            });
+            const img = delete_user.img_data.file_path;
+            await unlinkAsync(img[0].file_path1);
+            res.status(202).json(delete_user + "User deleted");
+        }
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+router.post(
+    "/Principal_About_add_data/:id",
+    async (req, res) => {
+        try {
+            const { para1 } = req.body;
+            await Principal.findOneAndUpdate({ _id: req.params.id }, { $push: { "img_data.para": { para1: para1 } } });
+            res.status(200).send("file uploaded successfully.");
+        } catch (error) {
+            // console.log(error)
+            res.status(400).send("Error while uploading file. Try again later.");
+        }
+    },
+    (error, req, res, next) => {
+        if (error) {
+            res.status(402).send(error.message);
+        }
+    }
+);
+
+router.post(
+    "/Principal_About_add",
+    upload.single("file"),
+    async (req, res) => {
+        try {
+            // ;
+            const file = new Principal({
+                "img_data.file_path": {
+                    file_path1: req.file.path,
+                    file_mimetype1: req.file.mimetype,
+                    value: false,
+                },
+            });
+            await file.save();
+            res.status(200).send("file uploaded successfully.");
+        } catch (error) {
+            console.log(error);
+            res.status(400).send("Error while uploading file. Try again later.");
+        }
+    },
+    (error, req, res, next) => {
+        if (error) {
+            res.status(402).send(error.message);
+        }
+    }
+);
+// About Us VicePrincipal
+
+router.get("/VicePrincipal_About", async (req, res) => {
+    const details = await VicePrincipal.find();
+    if (details.length === 0) {
+        res.status(200).json(false);
+    } else {
+        res.status(200).json(details);
+    }
+});
+
+router.post("/delete_VicePrincipal_About_data/:id", async (req, res) => {
+    try {
+        const { pid, type } = req.body;
+        if (type === "para") {
+            const delete_user = await VicePrincipal.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.para": { _id: pid } } });
+            res.status(200).json(delete_user + "User deleted");
+        } else {
+            const delete_user = await VicePrincipal.findOneAndDelete({
+                _id: req.params.id,
+            });
+            const img = delete_user.img_data.file_path;
+            await unlinkAsync(img[0].file_path1);
+            res.status(202).json(delete_user + "User deleted");
+        }
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+router.post(
+    "/VicePrincipal_About_add_data/:id",
+    async (req, res) => {
+        try {
+            const { para1 } = req.body;
+            await VicePrincipal.findOneAndUpdate({ _id: req.params.id }, { $push: { "img_data.para": { para1: para1 } } });
+            res.status(200).send("file uploaded successfully.");
+        } catch (error) {
+            // console.log(error)
+            res.status(400).send("Error while uploading file. Try again later.");
+        }
+    },
+    (error, req, res, next) => {
+        if (error) {
+            res.status(402).send(error.message);
+        }
+    }
+);
+
+router.post(
+    "/VicePrincipal_About_add",
+    upload.single("file"),
+    async (req, res) => {
+        try {
+            // ;
+            const file = new VicePrincipal({
+                "img_data.file_path": {
+                    file_path1: req.file.path,
+                    file_mimetype1: req.file.mimetype,
+                    value: false,
+                },
+            });
+            await file.save();
+            res.status(200).send("file uploaded successfully.");
+        } catch (error) {
+            console.log(error);
+            res.status(400).send("Error while uploading file. Try again later.");
+        }
+    },
+    (error, req, res, next) => {
+        if (error) {
+            res.status(402).send(error.message);
+        }
+    }
+);
+
+// About Us Gallery
+router.get("/About_Gallery", async (req, res) => {
+    const details = await Gallery_About.find();
+    res.status(200).json(details);
+});
+
+router.delete("/delete_Gallery_About/:id", async (req, res) => {
+    const delete_user = await Gallery_About.findOneAndDelete({
+        _id: req.params.id,
+    });
+    console.log(delete_user.file_path);
+    await unlinkAsync(delete_user.file_path);
+    res.status(200).json(delete_user + "User deleted");
+});
+
+router.post(
+    "/Gallery_About_add",
+    upload.single("file"),
+    async (req, res) => {
+        try {
+            const { path, mimetype } = req.file;
+            const dat = await Gallery_About.find()
+            if (dat.length <= 25) {
+                const file = new Gallery_About({
+                    file_path: path,
+                    file_mimetype: mimetype,
+                });
+                await file.save();
+                res.send("file uploaded successfully.");
+            } else {
+                await unlinkAsync(path);
+                res.status(402).send("Delete previous Images there is only a limit of 6 images");
+            }
+        } catch (error) {
+            res.status(400).send("Error while uploading file. Try again later.");
+        }
+    },
+    (error, req, res, next) => {
+        if (error) {
+            res.status(402).send(error.message);
+        }
+    }
+);
+
+// About Us Administration
+router.post("/delete_Administration/:id", async (req, res) => {
+    const delete_user = await About_Administration.findOne({ _id: req.params.id });
+    const arr = delete_user.img_data.file_path;
+    if (arr.length === 0) {
+        await delete_user.deleteOne({ _id: req.params.id });
+        // console.log(delete_user.img_data.file_path)
+        res.status(200).json(delete_user + "User deleted");
+    } else {
+        res.status(400).json("First Delete all the images related to this section");
+    }
+});
+router.post("/delete_img_Administration_fac/:id", async (req, res) => {
+    // console.log(req.body.file_path1)
+    const delete_user = await About_Administration.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
+    await unlinkAsync(req.body.file_path1);
+    res.status(200).json(delete_user + "User deleted");
+});
+
+router.post("/delete_pdf_link_Administration_fac/:id", async (req, res) => {
+    const delete_user = await About_Administration.findOneAndUpdate({ _id: req.params.id }, {
+        $set: {
+            "img_data.pdf_path": {
+                pdf_path1: "../daulatram/public/images/uploads",
+                pdf_mimetype1: null,
+                value: null,
+            },
+        },
+    });
+    const pdf = delete_user.img_data.pdf_path;
+
+    if (pdf[0].pdf_mimetype1 !== "text/link") {
+        console.log(pdf[0].pdf_mimetype1);
+        await unlinkAsync(pdf[0].pdf_path1);
+        res.status(200).json(delete_user + "User deleted");
+    } else {
+        console.log(pdf[0].pdf_mimetype1);
+        res.status(200).json(delete_user + "User deleted");
+    }
+});
+
+router.post("/delete_Administration_para/:id", async (req, res) => {
+    try {
+        const { pid, type } = req.body;
+        if (type === "para") {
+            const delete_user = await About_Administration.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.para": { _id: pid } } });
+            res.status(200).json(delete_user + "User deleted");
+        } else {
+            const delete_user = await About_Administration.findOneAndDelete({
+                _id: req.params.id,
+            });
+            const img = delete_user.img_data.file_path;
+            await unlinkAsync(img[0].file_path1);
+            res.status(202).json(delete_user + "User deleted");
+        }
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+
+router.get("/Administration", async (req, res) => {
+    try {
+        const files = await About_Administration.find({});
+        const sortedByCreationDate = files.sort(
+            (a, b) => b.createdAt - a.createdAt
+        );
+        res.send(sortedByCreationDate);
+    } catch (error) {
+        res.status(400).send("Error while getting list of files. Try again later.");
+    }
+});
+
+
+router.post(
+    "/Administration_add_para/:id",
+    async (req, res) => {
+        try {
+            const { para1 } = req.body;
+            await About_Administration.findOneAndUpdate({ _id: req.params.id }, { $push: { "img_data.para": { para1: para1 } } });
+            res.status(200).send("file uploaded successfully.");
+        } catch (error) {
+            // console.log(error)
+            res.status(400).send("Error while uploading file. Try again later.");
+        }
+    },
+    (error, req, res, next) => {
+        if (error) {
+            res.status(402).send(error.message);
+        }
+    }
+);
+
+
+router.post(
+    "/Administration_file_upload/:id",
+    upload.single("file"),
+    async (req, res) => {
+        try {
+            const { path, mimetype } = req.file;
+            // console.log(path, mimetype)
+            const data = await About_Administration.findOneAndUpdate({ _id: req.params.id }, {
+                $set: {
+                    "img_data.pdf_path": {
+                        pdf_path1: path,
+                        pdf_mimetype1: mimetype,
+                        value: true,
+                    },
+                },
+            });
+            if (data) {
+                // console.log(dat)
+                res.status(200).send("file uploaded successfully.");
+            } else {
+                res.status(401).send("Unable to upload CV, No data found");
+            }
+            // console.log(dat)
+        } catch (error) {
+            console.log(error);
+            res.status(402).send("Error while uploading file. Try again later.");
+        }
+    }
+);
+router.post("/Administration_add_link/:id", async (req, res) => {
+    try {
+        const { link } = req.body;
+
+        if (!link) {
+            return res
+                .status(400)
+                .json({ error: "Fill the Admission Details Properly" });
+        }
+
+        const data = await About_Administration.findOneAndUpdate({ _id: req.params.id }, {
+            $set: {
+                "img_data.pdf_path": {
+                    pdf_path1: link,
+                    pdf_mimetype1: "text/link",
+                    value: true,
+                },
+            },
+        });
+        if (data) {
+            // console.log(dat)
+            res.status(200).send("file uploaded successfully.");
+        } else {
+            res.status(401).send("Unable to update link, No data found");
+        }
+
+
+    } catch (err) {
+        console.log(err);
+    }
+});
+
+router.post("/Administration_upload", async (req, res) => {
+    try {
+        // 
+        const { title, description } = req.body;
+        const file = new About_Administration({
+            title: title,
+            description: description,
+            "img_data.pdf_path": { value: false },
+
+        });
+        await file.save();
+        res.send("file uploaded successfully.");
+    } catch (error) {
+        // console.log(error)
+        res.status(400).send("Error occur while uploading data");
+    }
+});
+router.post(
+    "/Administration_img_upload/:id",
+    upload.single("file"),
+    async (req, res) => {
+        try {
+            const { path, mimetype } = req.file;
+            const dat = await About_Administration.findOne({ _id: req.params.id })
+            const arr = dat.img_data.file_path;
+            if (arr.length <= 4) {
+                const data = await About_Administration.findOneAndUpdate({ _id: req.params.id }, {
+                    $push: {
+                        "img_data.file_path": {
+                            file_path1: path,
+                            file_mimetype1: mimetype,
+                        },
+                    },
+                });
+                // console.log(dat)
+                if (data) {
+                    res.status(200).send("file uploaded successfully.");
+                }
+            } else {
+                await unlinkAsync(path);
+                res.status(402).send("Delete previous Images there is only a limit of 6 images");
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(400).send("Error while uploading file. Try again later.");
+        }
+    },
+    (error, req, res, next) => {
+        if (error) {
+            res.status(402).send(error.message);
+        }
+    }
+);
+
+router.get("/Administration_download/:id", async (req, res) => {
+    try {
+        const file = await About_Administration.findById(req.params.id);
+        res.set({
+            "Content-Type": file.file_mimetype,
+        });
+        res.sendFile(path.join(__dirname, "..", file.file_path));
+    } catch (error) {
+        res.status(400).send("Error while downloading file. Try again later.");
+    }
+});
+
 
 module.exports = router;
