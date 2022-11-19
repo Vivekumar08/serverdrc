@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const Antiragg_Schema = mongoose.Schema({
+const Antirag_Schema = mongoose.Schema({
     title: {
         type: String,
         required: true,
@@ -23,6 +23,6 @@ const Antiragg_Schema = mongoose.Schema({
     timestamps: true
 });
 
-const Antiragg = mongoose.model('Antiragg', Antiragg_Schema);
+const Antirag = mongoose.model('Antirag', Antirag_Schema);
 
-module.exports = Antiragg;
+module.exports = Antirag;

@@ -96,7 +96,7 @@ const Scholarship = require("../models/StudentZone/Scholarship_Schema")
 const Student_Examform = require("../models/StudentZone/StudentZone_Examform_Schema")
 const Student_Feepayment = require("../models/StudentZone/StudentZone_Feepayment_Schema")
 const Student_Internal = require("../models/StudentZone/StudentZone_Internal_Schema")
-const Antiragg = require("../models/StudentZone/Antiragg_Schema")
+const Antiragg = require("../models/StudentZone/Antirag_Schema")
 const Student_Grievance = require("../models/StudentZone/Student_Grievance_Schema")
 const Student_union = require("../models/StudentZone/Student_union_Schema")
 const Placement_cell = require("../models/StudentZone/Placement_cell_Schema")
@@ -17965,71 +17965,71 @@ router.post(
 
 // Student-Zone Antiragging
 
-// router.get("/Antiragg", async (req, res) => {
-//     const details = await Antiragg.find();
-//     res.status(200).json(details);
-// });
-// router.delete("/delete_Antiragg/:id", async (req, res) => {
-//     const delete_user = await Antiragg.findOneAndDelete({
-//         _id: req.params.id,
-//     });
-//     if (delete_user.file_mimetype === "text/link") {
-//         console.log(delete_user.file_mimetype);
-//         res.status(200).json(delete_user + "User deleted");
-//     } else {
-//         console.log(delete_user.file_mimetype);
-//         await unlinkAsync(delete_user.file_path);
-//         res.status(200).json(delete_user + "User deleted");
-//     }
-// });
-// router.post("/Antiragg_add_link", async (req, res) => {
-//     try {
-//         ;
-//         const { file, link, title } = req.body;
-//         if (!title || !link || !file) {
-//             return res
-//                 .status(400)
-//                 .json({ error: "Fill the Admission Details Properly" });
-//         }
-//         const user = new Antiragg({
-//             title,
-//             link,
-//             file_path: file,
-//             file_mimetype: "text/link",
-//         });
-//         await user.save();
-//         res.status(200).json("file uploaded successfully.");
+router.get("/Antiragg", async (req, res) => {
+    const details = await Antiragg.find();
+    res.status(200).json(details);
+});
+router.delete("/delete_Antiragg/:id", async (req, res) => {
+    const delete_user = await Antiragg.findOneAndDelete({
+        _id: req.params.id,
+    });
+    if (delete_user.file_mimetype === "text/link") {
+        console.log(delete_user.file_mimetype);
+        res.status(200).json(delete_user + "User deleted");
+    } else {
+        console.log(delete_user.file_mimetype);
+        await unlinkAsync(delete_user.file_path);
+        res.status(200).json(delete_user + "User deleted");
+    }
+});
+router.post("/Antiragg_add_link", async (req, res) => {
+    try {
+        ;
+        const { file, link, title } = req.body;
+        if (!title || !link || !file) {
+            return res
+                .status(400)
+                .json({ error: "Fill the Admission Details Properly" });
+        }
+        const user = new Antiragg({
+            title,
+            link,
+            file_path: file,
+            file_mimetype: "text/link",
+        });
+        await user.save();
+        res.status(200).json("file uploaded successfully.");
 
 
-//     } catch (err) {
-//         console.log(err);
-//     }
-// });
-// router.post(
-//     "/Antiragg_add",
-//     upload.single("file"),
-//     async (req, res) => {
-//         try {
-//             const { title, link } = req.body;
-//             const { path, mimetype } = req.file;
-//             const file = new Antiragg({
-//                 title,
-//                 link,
-//                 file_path: path,
-//                 file_mimetype: mimetype,
-//             });
-//             await file.save();
-//             res.send("file uploaded successfully.");
-//         } catch (error) {
-//             res.status(400).send("Error while uploading file. Try again later.");
-//         }
-//     },
-//     (error, req, res, next) => {
-//         if (error) {
-//             res.status(402).send(error.message);
-//         }
-//     }
-// );
+    } catch (err) {
+        console.log(err);
+    }
+});
+router.post(
+    "/Antiragg_add",
+    upload.single("file"),
+    async (req, res) => {
+        try {
+            const { title, link } = req.body;
+            const { path, mimetype } = req.file;
+            const file = new Antiragg({
+                title,
+                link,
+                file_path: path,
+                file_mimetype: mimetype,
+            });
+            await file.save();
+            res.send("file uploaded successfully.");
+        } catch (error) {
+            res.status(400).send("Error while uploading file. Try again later.");
+        }
+    },
+    (error, req, res, next) => {
+        if (error) {
+            res.status(402).send(error.message);
+        }
+    }
+);
 
 
 // Teacher-In Charge
