@@ -117,7 +117,7 @@ const Useful_Links = require("../models/Useful_Links_schema")
 // SET STORAGE
 const storage = multer.diskStorage({
     destination(req, file, cb) {
-        cb(null, "../daulatram/public/images/uploads");
+        cb(null, "./uploads");
     },
     filename(req, file, cb) {
         cb(null, `${new Date().getTime()}_${file.originalname}`);
@@ -524,7 +524,6 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            // ;
             const file = new Founder({
                 "img_data.file_path": {
                     file_path1: req.file.path,
