@@ -18,7 +18,7 @@ app.use(express.json());
 
 
 app.get("/",async(req,res)=>{
-  res.json("Daulatram Server Deployed successfully, except departments, change")
+  res.json("Congratulations Daulatram Server Deployed successfully")
 })
 
 app.use(require('./router/api'));
