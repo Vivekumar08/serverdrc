@@ -61,6 +61,32 @@ const Bot_Lab_Staff = require("../models/Academics/Departments/Botany/Bot_Lab_St
 const Bot_Association = require("../models/Academics/Departments/Botany/Bot_Association_Schema")
 const Bot_Publications = require("../models/Academics/Departments/Botany/Bot_Publication_Schema")
 
+//Chemistry
+const Chem_Research_fac = require("../models/Academics/Departments/Chemistry/Chem_Research_fac_Schema")
+const Chem_Student_Achieve = require("../models/Academics/Departments/Chemistry/StuAch_Schema")
+const Chem_About = require("../models/Academics/Departments/Chemistry/About_depart_Schema")
+const Chem_Photo_Gallery = require("../models/Academics/Departments/Chemistry/Chem_Photo_Gallery_Schema")
+const Chem_Association = require("../models/Academics/Departments/Chemistry/Chem_Association_Schema")
+const Chem_Events = require("../models/Academics/Departments/Chemistry/Chem_Events_Schema")
+const Chem_Faculty = require("../models/Academics/Departments/Chemistry/Chem_Faculty_Schema")
+const Chem_Publications = require("../models/Academics/Departments/Chemistry/Chem_Publications_Schema")
+const Chem_ProgramOffered = require("../models/Academics/Departments/Chemistry/Chem_ProgramsOffered_Schema")
+const Chem_Awards = require("../models/Academics/Departments/Chemistry/Chem_Awards_Schema")
+
+//Commerce
+const Com_Research_fac = require("../models/Academics/Departments/Commerce/Com_Research_fac_Schema")
+const Com_Student_Achieve = require("../models/Academics/Departments/Commerce/StuAch_Schema")
+const Com_Faculty = require("../models/Academics/Departments/Commerce/Com_fac_Schema")
+const Com_Events = require("../models/Academics/Departments/Commerce/Com_Events_Schema")
+const Com_About = require("../models/Academics/Departments/Commerce/About_depart_Schema")
+const Com_Photo_Gallery = require("../models/Academics/Departments/Commerce/Com_Photo_Gallery_Schema")
+const Com_StuAch = require("../models/Academics/Departments/Commerce/StuAch_Schema")
+const Com_Fac = require("../models/Academics/Departments/Commerce/Fac")
+const Com_Association = require("../models/Academics/Departments/Commerce/Association")
+const Com_ProgramOffered = require("../models/Academics/Departments/Commerce/Com_ProgramsOffered_Schema")
+const Com_Publications = require("../models/Academics/Departments/Commerce/Com_Publications_Schema")
+const Com_Awards = require("../models/Academics/Departments/Commerce/Awards_Schema")
+
 //Hindi files
 const Hin_About = require("../models/Academics/Departments/Hindi/About_depart_Schema.js")
 const Hindi_Publications = require("../models/Academics/Departments/Hindi/Hindi_Publications_Schema")
