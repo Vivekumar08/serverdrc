@@ -48,6 +48,18 @@ const Bio_Evetns = require("../models/Academics/Departments/Biochemistry/Bio_Eve
 const Biochem_About = require("../models/Academics/Departments/Biochemistry/About_depart_Schema")
 const Bio_Photo_Gallery = require("../models/Academics/Departments/Biochemistry/Bio_Photo_Gallery_Schema")
 
+//Botany
+const Bot_Research_fac = require("../models/Academics/Departments/Botany/Bot_Research_fac_Schema")
+const Bot_Student_Achieve = require("../models/Academics/Departments/Botany/StuAch_Schema")
+const Bot_Faculty = require("../models/Academics/Departments/Botany/Bot_Faculty_Schema")
+const Botany_Events = require("../models/Academics/Departments/Botany/Botany_Events_Schema")
+const Bot_About = require("../models/Academics/Departments/Botany/About_depart_Schema")
+const Bot_Photo_Gallery = require("../models/Academics/Departments/Botany/Bot_Photo_Gallery_Schema")
+const Bot_ProgramOffered = require("../models/Academics/Departments/Botany/Bot_ProgramsOffered_Schema")
+const Bot_Awards = require("../models/Academics/Departments/Botany/Awards_Schema")
+const Bot_Lab_Staff = require("../models/Academics/Departments/Botany/Bot_Lab_Staff_Schema")
+const Bot_Association = require("../models/Academics/Departments/Botany/Bot_Association_Schema")
+const Bot_Publications = require("../models/Academics/Departments/Botany/Bot_Publication_Schema")
 
 //Hindi files
 const Hin_About = require("../models/Academics/Departments/Hindi/About_depart_Schema.js")
