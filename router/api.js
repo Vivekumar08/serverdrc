@@ -87,6 +87,36 @@ const Com_ProgramOffered = require("../models/Academics/Departments/Commerce/Com
 const Com_Publications = require("../models/Academics/Departments/Commerce/Com_Publications_Schema")
 const Com_Awards = require("../models/Academics/Departments/Commerce/Awards_Schema")
 
+//Economics
+const Eco_Research_fac = require("../models/Academics/Departments/Economics/Eco_Research_fac_Schema")
+const Eco_Student_Achieve = require("../models/Academics/Departments/Economics/StuAch_Schema")
+const  Eco_Faculty = require("../models/Academics/Departments/Economics/Eco_Faculty_Schema")
+const Eco_Events = require("../models/Academics/Departments/Economics/Eco_Events_Schema")
+const Eco_About = require("../models/Academics/Departments/Economics/About_depart_Schema")
+const Eco_Photo_Gallery = require("../models/Academics/Departments/Economics/Eco_Photo_Gallery_Schema")
+const Eco_Fac = require("../models/Academics/Departments/Economics/Fac")
+const Eco_Publications = require("../models/Academics/Departments/Economics/Eco_Publications_Schema")
+const Eco_Eve = require("../models/Academics/Departments/Economics/Eco_Events_Schema")
+const Eco_ProgramOffered = require("../models/Academics/Departments/Economics/Eco_ProgramsOffered_Schema")
+const Eco_Awards = require("../models/Academics/Departments/Economics/Eco_Awards_Schema")
+const Eco_Association  = require("../models/Academics/Departments/Economics/Eco_Association_Schema")
+
+//English
+const Eng_Research_fac = require("../models/Academics/Departments/English/Eng_Research_fac_Schema")
+const Eng_Student_Achieve = require("../models/Academics/Departments/English/StuAch_Schema")
+const Eng_Faculty = require("../models/Academics/Departments/English/Eng_Faculty_Schema")
+const Eng_Association = require("../models/Academics/Departments/English/Eng_Association_Schema")
+const Eng_Events = require("../models/Academics/Departments/English/Events")
+const Eng_About = require("../models/Academics/Departments/English/About_depart_Schema")
+const Eng_Photo_Gallery = require("../models/Academics/Departments/English/Eng_Photo_Gallery_Schema")
+const Eng_Publications = require("../models/Academics/Departments/English/Eng_Publications_Schema")
+const Eng_Eve = require("../models/Academics/Departments/English/Eng_Events_Schema")
+const Eng_ProgramOffered = require("../models/Academics/Departments/English/Eng_ProgramsOffered_Schema")
+const Eng_Awards = require("../models/Academics/Departments/English/Eng_Awards_Schema")
+= require("../models/Academics/Departments/English")
+= require("../models/Academics/Departments/English")
+= require("../models/Academics/Departments/English")
+
 //Hindi files
 const Hin_About = require("../models/Academics/Departments/Hindi/About_depart_Schema.js")
 const Hindi_Publications = require("../models/Academics/Departments/Hindi/Hindi_Publications_Schema")
