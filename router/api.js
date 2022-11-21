@@ -40,6 +40,77 @@ const Training = require("../models/Academics/Training_Schema")
 const Bio_Research_fac = require("../models/Academics/Departments/Biochemistry/Bio_Research_fac_Schema")
 
 
+
+//Hindi files
+const Hin_About = require("../models/Academics/Departments/Hindi/About_depart_Schema.js")
+const Hindi_Publications = require("../models/Academics/Departments/Hindi/Hindi_Publications_Schema")
+const Hindi_Association = require("../models/Academics/Departments/Hindi/Hindi_Association_Schema")
+const Hindi_Research_fac = require("../models/Academics/Departments/Hindi/Hindi_Research_fac_Schema")
+const Hin_Photo_Gallery = require("../models/Academics/Departments/Hindi/Hin_Photo_Gallery_Schema")
+const Hin_Student_Achieve = require("../models/Academics/Departments/Hindi/Hin_StuAch_Schema")
+const Hin_ProgramOffered = require("../models/Academics/Departments/Hindi/Hin_ProgramsOffered_Schema")
+const Hin_Awards = require("../models/Academics/Departments/Hindi/Hin_Awards_Schema")
+const Hin_Magazine = require("../models/Academics/Departments/Hindi/Magazine")
+const Hin_Faculty = require("../models/Academics/Departments/Hindi/Hin_Faculty_Schema")
+
+//History files
+const His_About = require("../models/Academics/Departments/History/About_depart_Schema")
+const Hist_Association = require("../models/Academics/Departments/History/Hist_Association_Schema")
+const Hist_ProgramOffered = require("../models/Academics/Departments/History/Hist_ProgramsOffered_Schema")
+const His_Awards = require("../models/Academics/Departments/History/Hist_Awards_Schema")
+const Hist_Publications = require("../models/Academics/Departments/History/Hist_Publications_Schema")
+const Hist_Photo_Gallery = require("../models/Academics/Departments/History/Hist_Photo_Gallery_Schema")
+const His_Student_Achieve = require("../models/Academics/Departments/History/His_StuAch_Schema") 
+const Hist_Research_fac = require("../models/Academics/Departments/History/Hist_Research_fac_Schema")
+const Hist_Faculty = require("../models/Academics/Departments/History/Hist_Faculty_Schema")
+
+//Math files
+const Math_About = require("../models/Academics/Departments/Mathematics/About_depart_Schema")
+const Math_Association = require("../models/Academics/Departments/Mathematics/Math_Association_Schema")
+const Math_ProgramOffered = require("../models/Academics/Departments/Mathematics/Math_ProgramsOffered_Schema")
+const Math_Awards = required("../models/Academics/Departments/Mathematics/Math_Awards_Schema")
+const Math_Publications = required("../models/Academics/Departments/Mathematics/Math_Publications_schema")
+const Math_Photo_Gallery = required("../models/Academics/Departments/Mathematics/Math_Photo_Gallery_Schema")
+const Math_Student_Achieve = required("../models/Academics/Departments/Mathematics/Math_StuAch_Schema")
+const Math_Research_fac = require("../models/Academics/Departments/Mathematics/Math_Research_fac_Schema")
+const Math_Faculty = require("../models/Academics/Departments/Mathematics/Math_fac_schema")
+const Math_Events = require("../models/Academics/Departments/Mathematics/Math_Events_Schema")
+
+
+//Music files
+const Music_About = require("../models/Academics/Departments/Music/Music_About_depart_Schema")
+const Music_Awards = require("../models/Academics/Departments/Music/Music_Awards_Schema")
+const Music_Association = require("../models/Academics/Departments/Music/Music_Association_Schema")
+const Music_Publications = require("../models/Academics/Departments/Music/Music_Publications_Schema")
+const Music_Photo_Gallery = require("../models/Academics/Departments/Music/Music_Photo_Gallery_Schema")
+const Music_Student_Achieve = require("../models/Academics/Departments/Music/Music_StuAch_Schema")
+const Music_Research_fac = require("../models/Academics/Departments/Music/Music_Research_fac_Schema")
+const Music_Events = require("../models/Academics/Departments/Music/Music_Events_Schema")
+
+//NHE files
+const NHE_About = require("../models/Academics/Departments/NHE/About_depart_Schema")
+const NHE_Awards = require("../models/Academics/Departments/NHE/Awards_Schema")
+const NHE_Association = require("../models/Academics/Departments/NHE/NHE_Association_Schema")
+const NHE_Publications = require("../models/Academics/Departments/NHE/NHE_Publications_Schema")
+const NHE_Photo_Gallery = require("../models/Academics/Departments/NHE/NHE_Photo_Gallery_Schema")
+const NHE_Student_Achieve = require("../models/Academics/Departments/NHE/NHE_StuAch_Schema")
+const NHE_fac = require("../models/Academics/Departments/NHE/NHE_fac_Schema")
+const NHE_Faculty = require("../models/Academics/Departments/NHE/NHE_faculty_schema")
+const NHE_Events = require("../models/Academics/Departments/NHE/NHE_Events_Schema")
+
+//Philosophy files
+const Philo_About = require("../models/Academics/Departments/Philosophy/About_depart_Schema")
+const Philo_Association = require("../models/Academics/Departments/Philosophy/Philo_Association_Schema")
+const Philo_ProgramOffered = require("../models/Academics/Departments/Philosophy/Philo_ProgramsOffered_Schema")
+const Philo_Awards = require("../models/Academics/Departments/Philosophy/Philo_Awards_Schema")
+const Philo_Photo_Gallery =require("../models/Academics/Departments/Philosophy/Philo_Photo_Gallery_Schema")
+const Philo_Publications = require("../models/Academics/Departments/Philosophy/Philo_Publications_schema")
+const Philo_Student_Achieve = require("../models/Academics/Departments/Philosophy/Philo_StuAch_Schema")
+const Philo_fac = require("../models/Academics/Departments/Philosophy/Philo_fac_Schema")
+const philo_Faculty = require("../models/Academics/Departments/Philosophy/philo_faculty_schema")
+const Philo_Events = require("../models/Academics/Departments/Philosophy/Philo_events_schema")
+
+
 // Accreditation files
 const Accred = require("../models/Accreditation/Accreditation_Schema")
 
