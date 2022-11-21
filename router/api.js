@@ -38,6 +38,15 @@ const Training = require("../models/Academics/Training_Schema")
 
 // Biochemistry files
 const Bio_Research_fac = require("../models/Academics/Departments/Biochemistry/Bio_Research_fac_Schema")
+const Bio_Publications = require("../models/Academics/Departments/Biochemistry/Bio_Publications_Schema")
+const Bio_Awards = require("../models/Academics/Departments/Biochemistry/Bio_Awards_Schema")
+const Bio_Student_Achieve = require("../models/Academics/Departments/Biochemistry/Bio_Student_Achieve_Schema")
+const Bio_Association = require("../models/Academics/Departments/Biochemistry/Bio_Association_Schema")
+const Bio_Faculty = require("../models/Academics/Departments/Biochemistry/Bio_Faculty_Schema")
+const Bio_ProgramOffered = require("../models/Academics/Departments/Biochemistry/Bio_ProgramsOffered_Schema")
+const Bio_Evetns = require("../models/Academics/Departments/Biochemistry/Bio_Evetns_Schema")
+const Biochem_About = require("../models/Academics/Departments/Biochemistry/About_depart_Schema")
+const Bio_Photo_Gallery = require("../models/Academics/Departments/Biochemistry/Bio_Photo_Gallery_Schema")
 
 //Physical Education files
 const PE_Facilities = require("../models/Academics/Departments/Physical_Education/PE_Facilities_Schema")
@@ -110,9 +119,6 @@ const Zoo_Awards = require("../models/Academics/Departments/Zoology/Zoology_Awar
 const Zoology_Events = require("../models/Academics/Departments/Zoology/Zoology_Events_Schema")
 const Zoo_Publications = require("../models/Academics/Departments/Zoology/Zoo_Publications_Schema")
 const Zoo_Facilities = require("../models/Academics/Departments/Zoology/Zoo_Facilities_Schema")
-
-
-
 
 // Accreditation files
 const Accred = require("../models/Accreditation/Accreditation_Schema")
