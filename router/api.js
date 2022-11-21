@@ -113,9 +113,6 @@ const Eng_Publications = require("../models/Academics/Departments/English/Eng_Pu
 const Eng_Eve = require("../models/Academics/Departments/English/Eng_Events_Schema")
 const Eng_ProgramOffered = require("../models/Academics/Departments/English/Eng_ProgramsOffered_Schema")
 const Eng_Awards = require("../models/Academics/Departments/English/Eng_Awards_Schema")
-= require("../models/Academics/Departments/English")
-= require("../models/Academics/Departments/English")
-= require("../models/Academics/Departments/English")
 
 //Hindi files
 const Hin_About = require("../models/Academics/Departments/Hindi/About_depart_Schema.js")
