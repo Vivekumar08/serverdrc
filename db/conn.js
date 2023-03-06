@@ -6,3 +6,4 @@ mongoose.connect(uri, {
 }).then(() => {
   console.log(`connection successful`);
 }).catch((err) => console.log(err));
+

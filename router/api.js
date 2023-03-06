@@ -1,6 +1,6 @@
 const express = require("express");
 const path = require("path");
-const fs = require("fs");
+// const fs = require("fs");
 const sanitize = require("mongo-sanitize");
 const { promisify } = require("util");
 const router = express.Router();
@@ -15,7 +15,7 @@ const {
     GridFsStorage
 } = require("multer-gridfs-storage");
 
-const unlinkAsync = promisify(fs.unlink);
+// const unlinkAsync = promisify(fs.unlink);
 
 // Admin 
 const User = require("../models/adminSchema");
@@ -332,7 +332,8 @@ const Complaints = require("../models/StudentZone/Complaints_schema")
 
 // Other files
 const Events_and_Activities = require("../models/Events_and_Activities_Schema")
-const Useful_Links = require("../models/Useful_Links_schema")
+const Useful_Links = require("../models/Useful_Links_schema");
+const deleteFile = require("../utils/delete_file_gfs");
 
 // SET STORAGE
 let bucket;
@@ -343,7 +344,6 @@ mongoose.connection.on("connected", () => {
     });
     console.log("File Bucket created successfully");
 });
-
 
 const storage = new GridFsStorage({
     url: process.env.DATABASE,
@@ -644,7 +644,7 @@ router.post("/delete_Guidelines_fac/:id", async (req, res) => {
 router.post("/delete_img_Guidelines_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Guidelines.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -697,7 +697,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -747,7 +747,8 @@ router.post("/delete_Founder_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            // deleteFile(img[0].file_path1)
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -821,7 +822,9 @@ router.post("/delete_Chairperson_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            // deleteFile(img[0].file_path1)
+            deleteFile(img[0].file_path1)
+
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -899,7 +902,7 @@ router.post("/delete_Mission_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -974,7 +977,7 @@ router.post("/delete_Principal_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -1049,7 +1052,7 @@ router.post("/delete_VicePrincipal_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -1110,7 +1113,8 @@ router.get("/Staff_Roster", async (req, res) => {
 });
 router.delete("/delete_Staff_Roster/:id", async (req, res) => {
     const delete_user = await Roster.findOneAndDelete({ _id: req.params.id });
-    await unlinkAsync(delete_user.file_path);
+    // deleteFile(delete_user.file_path);
+    deleteFile(delete_user.file_path)
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -1151,7 +1155,7 @@ router.get("/bulletin", async (req, res) => {
 });
 router.delete("/delete_admissionbulletin/:id", async (req, res) => {
     const delete_user = await Bulletin.findOneAndDelete({ _id: req.params.id });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -1203,7 +1207,7 @@ router.post("/delete_Biochem_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -1278,7 +1282,7 @@ router.post("/delete_Bot_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -1353,7 +1357,7 @@ router.post("/delete_Chem_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -1428,7 +1432,7 @@ router.post("/delete_Com_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -1503,7 +1507,7 @@ router.post("/delete_Eco_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -1578,7 +1582,7 @@ router.post("/delete_Eng_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -1653,7 +1657,7 @@ router.post("/delete_Hin_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -1728,7 +1732,7 @@ router.post("/delete_His_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -1803,7 +1807,7 @@ router.post("/delete_Music_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -1879,7 +1883,7 @@ router.post("/delete_NHE_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -1955,7 +1959,7 @@ router.post("/delete_Philo_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -2031,7 +2035,7 @@ router.post("/delete_PE_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -2107,7 +2111,7 @@ router.post("/delete_Phy_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -2183,7 +2187,7 @@ router.post("/delete_Pol_Sci_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -2259,7 +2263,7 @@ router.post("/delete_Psy_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -2335,7 +2339,7 @@ router.post("/delete_Sans_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -2411,7 +2415,7 @@ router.post("/delete_Zoo_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -2487,7 +2491,7 @@ router.post("/delete_Math_About_data/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -2556,7 +2560,7 @@ router.post("/delete_Sans_Association/:id", async (req, res) => {
 router.post("/delete_img_Sans_Association_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Sans_Association.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -2574,7 +2578,7 @@ router.post("/delete_pdf_link_Sans_Association_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -2593,7 +2597,7 @@ router.post("/delete_Sans_Association_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -2735,7 +2739,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -2780,7 +2784,7 @@ router.post("/delete_PS_Association/:id", async (req, res) => {
 router.post("/delete_img_PS_Association_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await PS_Association.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -2798,7 +2802,7 @@ router.post("/delete_pdf_link_PS_Association_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -2817,7 +2821,7 @@ router.post("/delete_PS_Association_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -2959,7 +2963,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -3002,7 +3006,7 @@ router.post("/delete_Psycho_Association/:id", async (req, res) => {
 router.post("/delete_img_Psycho_Association_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Psycho_Association.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -3020,7 +3024,7 @@ router.post("/delete_pdf_link_Psycho_Association_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -3039,7 +3043,7 @@ router.post("/delete_Psycho_Association_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -3181,7 +3185,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -3225,7 +3229,7 @@ router.post("/delete_Physics_Association/:id", async (req, res) => {
 router.post("/delete_img_Physics_Association_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Physics_Association.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -3243,7 +3247,7 @@ router.post("/delete_pdf_link_Physics_Association_fac/:id", async (req, res) => 
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -3262,7 +3266,7 @@ router.post("/delete_Physics_Association_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -3404,7 +3408,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -3446,7 +3450,7 @@ router.post("/delete_PE_Association/:id", async (req, res) => {
 router.post("/delete_img_PE_Association_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await PE_Association.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -3464,7 +3468,7 @@ router.post("/delete_pdf_link_PE_Association_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -3483,7 +3487,7 @@ router.post("/delete_PE_Association_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -3625,7 +3629,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -3666,7 +3670,7 @@ router.post("/delete_Music_Awards/:id", async (req, res) => {
 router.post("/delete_img_Music_Awards_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Music_Awards.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -3684,7 +3688,7 @@ router.post("/delete_pdf_link_Music_Awards_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -3703,7 +3707,7 @@ router.post("/delete_Music_Awards_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -3845,7 +3849,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -3887,7 +3891,7 @@ router.post("/delete_NHE_Awards/:id", async (req, res) => {
 router.post("/delete_img_NHE_Awards_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await NHE_Awards.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -3905,7 +3909,7 @@ router.post("/delete_pdf_link_NHE_Awards_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -3924,7 +3928,7 @@ router.post("/delete_NHE_Awards_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -4066,7 +4070,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -4109,7 +4113,7 @@ router.post("/delete_NHE_Association/:id", async (req, res) => {
 router.post("/delete_img_NHE_Association_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await NHE_Association.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -4127,7 +4131,7 @@ router.post("/delete_pdf_link_NHE_Association_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -4146,7 +4150,7 @@ router.post("/delete_NHE_Association_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -4288,7 +4292,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -4330,7 +4334,7 @@ router.post("/delete_Philo_Association/:id", async (req, res) => {
 router.post("/delete_img_Philo_Association_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Philo_Association.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -4348,7 +4352,7 @@ router.post("/delete_pdf_link_Philo_Association_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -4367,7 +4371,7 @@ router.post("/delete_Philo_Association_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -4509,7 +4513,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -4551,7 +4555,7 @@ router.post("/delete_Math_Association/:id", async (req, res) => {
 router.post("/delete_img_Math_Association_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Math_Association.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -4569,7 +4573,7 @@ router.post("/delete_pdf_link_Math_Association_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -4588,7 +4592,7 @@ router.post("/delete_Math_Association_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -4730,7 +4734,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -4772,7 +4776,7 @@ router.post("/delete_Music_Association/:id", async (req, res) => {
 router.post("/delete_img_Music_Association_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Music_Association.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -4790,7 +4794,7 @@ router.post("/delete_pdf_link_Music_Association_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -4809,7 +4813,7 @@ router.post("/delete_Music_Association_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -4951,7 +4955,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -4992,7 +4996,7 @@ router.delete("/delete_Bio_ProgramOffered/:id", async (req, res) => {
     const delete_user = await Bio_ProgramOffered.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -5037,7 +5041,7 @@ router.post("/delete_Hist_Association/:id", async (req, res) => {
 router.post("/delete_img_Hist_Association_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Hist_Association.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -5055,7 +5059,7 @@ router.post("/delete_pdf_link_Hist_Association_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -5074,7 +5078,7 @@ router.post("/delete_Hist_Association_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -5216,7 +5220,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -5260,7 +5264,7 @@ router.post("/delete_Bio_Awards/:id", async (req, res) => {
 router.post("/delete_img_Bio_Awards_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Bio_Awards.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -5278,7 +5282,7 @@ router.post("/delete_pdf_link_Bio_Awards_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -5297,7 +5301,7 @@ router.post("/delete_Bio_Awards_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -5439,7 +5443,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -5476,7 +5480,7 @@ router.delete("/delete_Math_ProgramOffered/:id", async (req, res) => {
     const delete_user = await Math_ProgramOffered.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -5521,7 +5525,7 @@ router.post("/delete_Math_Awards/:id", async (req, res) => {
 router.post("/delete_img_Math_Awards_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Math_Awards.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -5539,7 +5543,7 @@ router.post("/delete_pdf_link_Math_Awards_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -5558,7 +5562,7 @@ router.post("/delete_Math_Awards_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -5700,7 +5704,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -5738,7 +5742,7 @@ router.delete("/delete_NHE_ProgramOffered/:id", async (req, res) => {
     const delete_user = await NHE_ProgramOffered.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -5779,7 +5783,7 @@ router.delete("/delete_Philo_ProgramOffered/:id", async (req, res) => {
     const delete_user = await Philo_ProgramOffered.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -5818,7 +5822,7 @@ router.delete("/delete_Hist_ProgramOffered/:id", async (req, res) => {
     const delete_user = await Hist_ProgramOffered.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -5863,7 +5867,7 @@ router.post("/delete_His_Awards/:id", async (req, res) => {
 router.post("/delete_img_His_Awards_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await His_Awards.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -5881,7 +5885,7 @@ router.post("/delete_pdf_link_His_Awards_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -5900,7 +5904,7 @@ router.post("/delete_His_Awards_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -6042,7 +6046,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -6078,7 +6082,7 @@ router.delete("/delete_Com_ProgramOffered/:id", async (req, res) => {
     const delete_user = await Com_ProgramOffered.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -6123,7 +6127,7 @@ router.post("/delete_Com_Awards/:id", async (req, res) => {
 router.post("/delete_img_Com_Awards_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Com_Awards.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -6141,7 +6145,7 @@ router.post("/delete_pdf_link_Com_Awards_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -6160,7 +6164,7 @@ router.post("/delete_Com_Awards_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -6302,7 +6306,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -6339,7 +6343,7 @@ router.delete("/delete_Chem_ProgramOffered/:id", async (req, res) => {
     const delete_user = await Chem_ProgramOffered.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -6384,7 +6388,7 @@ router.post("/delete_Chem_Awards/:id", async (req, res) => {
 router.post("/delete_img_Chem_Awards_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Chem_Awards.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -6402,7 +6406,7 @@ router.post("/delete_pdf_link_Chem_Awards_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -6421,7 +6425,7 @@ router.post("/delete_Chem_Awards_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -6563,7 +6567,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -6600,7 +6604,7 @@ router.delete("/delete_Bot_ProgramOffered/:id", async (req, res) => {
     const delete_user = await Bot_ProgramOffered.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -6639,7 +6643,7 @@ router.delete("/delete_Senior_list/:id", async (req, res) => {
     const delete_user = await Senior_list.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -6684,7 +6688,7 @@ router.post("/delete_Bot_Awards/:id", async (req, res) => {
 router.post("/delete_img_Bot_Awards_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Bot_Awards.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -6702,7 +6706,7 @@ router.post("/delete_pdf_link_Bot_Awards_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -6721,7 +6725,7 @@ router.post("/delete_Bot_Awards_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -6863,7 +6867,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -6900,7 +6904,7 @@ router.delete("/delete_Chem_StuAch/:id", async (req, res) => {
     const delete_user = await Chem_StuAch.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -6937,7 +6941,7 @@ router.get("/Com_StuAch", async (req, res) => {
 });
 router.delete("/delete_Com_StuAch/:id", async (req, res) => {
     const delete_user = await Com_StuAch.findOneAndDelete({ _id: req.params.id });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -6974,7 +6978,7 @@ router.get("/Eco_StuAch", async (req, res) => {
 });
 router.delete("/delete_Eco_StuAch/:id", async (req, res) => {
     const delete_user = await Eco_StuAch.findOneAndDelete({ _id: req.params.id });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -7011,7 +7015,7 @@ router.get("/Eng_StuAch", async (req, res) => {
 });
 router.delete("/delete_Eng_StuAch/:id", async (req, res) => {
     const delete_user = await Eng_StuAch.findOneAndDelete({ _id: req.params.id });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -7058,7 +7062,7 @@ router.post("/delete_Chem_Publications/:id", async (req, res) => {
 router.post("/delete_img_Chem_Publications_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Chem_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -7076,7 +7080,7 @@ router.post("/delete_pdf_link_Chem_Publications_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -7095,7 +7099,7 @@ router.post("/delete_Chem_Publications_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -7237,7 +7241,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -7280,7 +7284,7 @@ router.post("/delete_Com_Publications/:id", async (req, res) => {
 router.post("/delete_img_Com_Publications_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Com_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -7298,7 +7302,7 @@ router.post("/delete_pdf_link_Com_Publications_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -7317,7 +7321,7 @@ router.post("/delete_Com_Publications_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -7459,7 +7463,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -7501,7 +7505,7 @@ router.post("/delete_Eco_Publications/:id", async (req, res) => {
 router.post("/delete_img_Eco_Publications_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Eco_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -7519,7 +7523,7 @@ router.post("/delete_pdf_link_Eco_Publications_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -7538,7 +7542,7 @@ router.post("/delete_Eco_Publications_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -7680,7 +7684,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -7723,7 +7727,7 @@ router.post("/delete_Eng_Publications/:id", async (req, res) => {
 router.post("/delete_img_Eng_Publications_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Eng_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -7741,7 +7745,7 @@ router.post("/delete_pdf_link_Eng_Publications_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -7760,7 +7764,7 @@ router.post("/delete_Eng_Publications_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -7902,7 +7906,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -7944,7 +7948,7 @@ router.post("/delete_Hist_Publications/:id", async (req, res) => {
 router.post("/delete_img_Hist_Publications_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Hist_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -7962,7 +7966,7 @@ router.post("/delete_pdf_link_Hist_Publications_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -7981,7 +7985,7 @@ router.post("/delete_Hist_Publications_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -8123,7 +8127,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -8164,7 +8168,7 @@ router.post("/delete_Music_Publications/:id", async (req, res) => {
 router.post("/delete_img_Music_Publications_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Music_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -8182,7 +8186,7 @@ router.post("/delete_pdf_link_Music_Publications_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -8201,7 +8205,7 @@ router.post("/delete_Music_Publications_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -8343,7 +8347,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -8384,7 +8388,7 @@ router.post("/delete_NHE_Publications/:id", async (req, res) => {
 router.post("/delete_img_NHE_Publications_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await NHE_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -8402,7 +8406,7 @@ router.post("/delete_pdf_link_NHE_Publications_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -8421,7 +8425,7 @@ router.post("/delete_NHE_Publications_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -8563,7 +8567,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -8607,7 +8611,7 @@ router.post("/delete_Math_Publications/:id", async (req, res) => {
 router.post("/delete_img_Math_Publications_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Math_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -8625,7 +8629,7 @@ router.post("/delete_pdf_link_Math_Publications_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -8644,7 +8648,7 @@ router.post("/delete_Math_Publications_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -8786,7 +8790,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -8829,7 +8833,7 @@ router.post("/delete_Hindi_Publications/:id", async (req, res) => {
 router.post("/delete_img_Hindi_Publications_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Hindi_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -8847,7 +8851,7 @@ router.post("/delete_pdf_link_Hindi_Publications_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -8866,7 +8870,7 @@ router.post("/delete_Hindi_Publications_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -9008,7 +9012,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -9051,7 +9055,7 @@ router.post("/delete_Chem_Association/:id", async (req, res) => {
 router.post("/delete_img_Chem_Association_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Chem_Association.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -9069,7 +9073,7 @@ router.post("/delete_pdf_link_Chem_Association_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -9088,7 +9092,7 @@ router.post("/delete_Chem_Association_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -9230,7 +9234,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -9272,7 +9276,7 @@ router.post("/delete_Com_Association/:id", async (req, res) => {
 router.post("/delete_img_Com_Association_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Com_Association.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -9290,7 +9294,7 @@ router.post("/delete_pdf_link_Com_Association_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -9309,7 +9313,7 @@ router.post("/delete_Com_Association_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -9451,7 +9455,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -9493,7 +9497,7 @@ router.post("/delete_Eco_Association/:id", async (req, res) => {
 router.post("/delete_img_Eco_Association_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Eco_Association.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -9511,7 +9515,7 @@ router.post("/delete_pdf_link_Eco_Association_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -9530,7 +9534,7 @@ router.post("/delete_Eco_Association_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -9672,7 +9676,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -9715,7 +9719,7 @@ router.post("/delete_Eng_Association/:id", async (req, res) => {
 router.post("/delete_img_Eng_Association_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Eng_Association.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -9733,7 +9737,7 @@ router.post("/delete_pdf_link_Eng_Association_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -9752,7 +9756,7 @@ router.post("/delete_Eng_Association_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -9894,7 +9898,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -9944,7 +9948,7 @@ router.post("/delete_Hindi_Association/:id", async (req, res) => {
 router.post("/delete_img_Hindi_Association_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Hindi_Association.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -9962,7 +9966,7 @@ router.post("/delete_pdf_link_Hindi_Association_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -9981,7 +9985,7 @@ router.post("/delete_Hindi_Association_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -10123,7 +10127,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -10157,7 +10161,7 @@ router.get("/Chem_Fac", async (req, res) => {
 });
 router.delete("/delete_Chem_Fac/:id", async (req, res) => {
     const delete_user = await Chem_Fac.findOneAndDelete({ _id: req.params.id });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -10194,7 +10198,7 @@ router.get("/Com_Fac", async (req, res) => {
 });
 router.delete("/delete_Com_Fac/:id", async (req, res) => {
     const delete_user = await Com_Fac.findOneAndDelete({ _id: req.params.id });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -10231,7 +10235,7 @@ router.get("/Eco_Fac", async (req, res) => {
 });
 router.delete("/delete_Eco_Fac/:id", async (req, res) => {
     const delete_user = await Eco_Fac.findOneAndDelete({ _id: req.params.id });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -10277,7 +10281,7 @@ router.post("/delete_Hindi_Research_facilities/:id", async (req, res) => {
 router.post("/delete_img_Hindi_Research_facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Hindi_Research_fac.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -10295,7 +10299,7 @@ router.post("/delete_pdf_link_Hindi_Research_facilities_fac/:id", async (req, re
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -10314,7 +10318,7 @@ router.post("/delete_Hindi_Research_facilities_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -10456,7 +10460,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -10490,7 +10494,7 @@ router.get("/Eco_Eve", async (req, res) => {
 });
 router.delete("/delete_Eco_Eve/:id", async (req, res) => {
     const delete_user = await Eco_Eve.findOneAndDelete({ _id: req.params.id });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -10527,7 +10531,7 @@ router.get("/Eng_Eve", async (req, res) => {
 });
 router.delete("/delete_Eng_Eve/:id", async (req, res) => {
     const delete_user = await Eng_Eve.findOneAndDelete({ _id: req.params.id });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -10568,7 +10572,7 @@ router.delete("/delete_PE_ProgramOffered/:id", async (req, res) => {
     const delete_user = await PE_ProgramOffered.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -10608,7 +10612,7 @@ router.delete("/delete_Physics_ProgramOffered/:id", async (req, res) => {
     const delete_user = await Physics_ProgramOffered.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -10647,7 +10651,7 @@ router.delete("/delete_PolSci_ProgramOffered/:id", async (req, res) => {
     const delete_user = await PolSci_ProgramOffered.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -10686,7 +10690,7 @@ router.delete("/delete_Psychology_ProgramOffered/:id", async (req, res) => {
     const delete_user = await Psychology_ProgramOffered.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -10725,7 +10729,7 @@ router.delete("/delete_Sanskrit_ProgramOffered/:id", async (req, res) => {
     const delete_user = await Sanskrit_ProgramOffered.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -10770,7 +10774,7 @@ router.post("/delete_Zoo_Association/:id", async (req, res) => {
 router.post("/delete_img_Zoo_Association_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Zoo_Association.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -10788,7 +10792,7 @@ router.post("/delete_pdf_link_Zoo_Association_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -10807,7 +10811,7 @@ router.post("/delete_Zoo_Association_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -10949,7 +10953,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -10987,7 +10991,7 @@ router.delete("/delete_Zoology_ProgramOffered/:id", async (req, res) => {
     const delete_user = await Zoology_ProgramOffered.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -11025,7 +11029,7 @@ router.get("/PE_Fac", async (req, res) => {
 });
 router.delete("/delete_PE_Fac/:id", async (req, res) => {
     const delete_user = await PE_Fac.findOneAndDelete({ _id: req.params.id });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -11072,7 +11076,7 @@ router.post("/delete_Philo_Awards/:id", async (req, res) => {
 router.post("/delete_img_Philo_Awards_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Philo_Awards.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -11090,7 +11094,7 @@ router.post("/delete_pdf_link_Philo_Awards_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -11109,7 +11113,7 @@ router.post("/delete_Philo_Awards_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -11251,7 +11255,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -11294,7 +11298,7 @@ router.post("/delete_PE_Awards/:id", async (req, res) => {
 router.post("/delete_img_PE_Awards_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await PE_Awards.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -11312,7 +11316,7 @@ router.post("/delete_pdf_link_PE_Awards_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -11331,7 +11335,7 @@ router.post("/delete_PE_Awards_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -11473,7 +11477,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -11516,7 +11520,7 @@ router.post("/delete_Phy_Awards/:id", async (req, res) => {
 router.post("/delete_img_Phy_Awards_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Phy_Awards.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -11534,7 +11538,7 @@ router.post("/delete_pdf_link_Phy_Awards_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -11553,7 +11557,7 @@ router.post("/delete_Phy_Awards_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -11695,7 +11699,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -11732,15 +11736,15 @@ router.post("/delete_PolSci_Events/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -11821,15 +11825,15 @@ router.post("/delete_Sanskrit_Events/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -11910,15 +11914,15 @@ router.post("/delete_Zoology_Events/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -11999,7 +12003,7 @@ router.delete("/delete_Physics_Stuachieve/:id", async (req, res) => {
     const delete_user = await Physics_Stuachieve.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -12038,7 +12042,7 @@ router.delete("/delete_Sanskrit_Stuachieve/:id", async (req, res) => {
     const delete_user = await Sanskrit_Stuachieve.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -12077,7 +12081,7 @@ router.delete("/delete_Zoology_Stuachieve/:id", async (req, res) => {
     const delete_user = await Zoology_Stuachieve.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -12116,7 +12120,7 @@ router.delete("/delete_Bot_Publications/:id", async (req, res) => {
     const delete_user = await Bot_Publications.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -12161,7 +12165,7 @@ router.post("/delete_Psycho_Publications/:id", async (req, res) => {
 router.post("/delete_img_Psycho_Publications_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Psycho_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -12179,7 +12183,7 @@ router.post("/delete_pdf_link_Psycho_Publications_fac/:id", async (req, res) => 
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -12198,7 +12202,7 @@ router.post("/delete_Psycho_Publications_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -12340,7 +12344,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -12387,7 +12391,7 @@ router.post("/delete_Physics_Publications/:id", async (req, res) => {
 router.post("/delete_img_Physics_Publications_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Physics_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -12405,7 +12409,7 @@ router.post("/delete_pdf_link_Physics_Publications_fac/:id", async (req, res) =>
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -12424,7 +12428,7 @@ router.post("/delete_Physics_Publications_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -12566,7 +12570,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -12603,7 +12607,7 @@ router.delete("/delete_PS_Publications/:id", async (req, res) => {
     const delete_user = await PS_Publications.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -12647,7 +12651,7 @@ router.post("/delete_PS_Publications/:id", async (req, res) => {
 router.post("/delete_img_PS_Publications_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await PS_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -12665,7 +12669,7 @@ router.post("/delete_pdf_link_PS_Publications_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -12684,7 +12688,7 @@ router.post("/delete_PS_Publications_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -12826,7 +12830,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -12870,7 +12874,7 @@ router.post("/delete_Zoo_Publications/:id", async (req, res) => {
 router.post("/delete_img_Zoo_Publications_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Zoo_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -12888,7 +12892,7 @@ router.post("/delete_pdf_link_Zoo_Publications_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -12907,7 +12911,7 @@ router.post("/delete_Zoo_Publications_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -13049,7 +13053,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -13091,7 +13095,7 @@ router.post("/delete_Sans_Publications/:id", async (req, res) => {
 router.post("/delete_img_Sans_Publications_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Sans_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -13109,7 +13113,7 @@ router.post("/delete_pdf_link_Sans_Publications_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -13128,7 +13132,7 @@ router.post("/delete_Sans_Publications_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -13270,7 +13274,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -13307,7 +13311,7 @@ router.delete("/delete_Physics_Association/:id", async (req, res) => {
     const delete_user = await Physics_Association.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -13347,7 +13351,7 @@ router.delete("/delete_Physics_Newsletter/:id", async (req, res) => {
     const delete_user = await Physics_Newsletter.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -13385,7 +13389,7 @@ router.delete("/delete_PS_Association/:id", async (req, res) => {
     const delete_user = await PS_Association.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -13423,7 +13427,7 @@ router.delete("/delete_Sanskrit_Association/:id", async (req, res) => {
     const delete_user = await Sanskrit_Association.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -13468,7 +13472,7 @@ router.post("/delete_PS_Awards/:id", async (req, res) => {
 router.post("/delete_img_PS_Awards_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await PS_Awards.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -13486,7 +13490,7 @@ router.post("/delete_pdf_link_PS_Awards_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -13505,7 +13509,7 @@ router.post("/delete_PS_Awards_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -13647,7 +13651,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -13690,7 +13694,7 @@ router.post("/delete_Psy_Awards/:id", async (req, res) => {
 router.post("/delete_img_Psy_Awards_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Psy_Awards.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -13708,7 +13712,7 @@ router.post("/delete_pdf_link_Psy_Awards_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -13727,7 +13731,7 @@ router.post("/delete_Psy_Awards_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -13869,7 +13873,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -13913,7 +13917,7 @@ router.post("/delete_Sans_Awards/:id", async (req, res) => {
 router.post("/delete_img_Sans_Awards_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Sans_Awards.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -13931,7 +13935,7 @@ router.post("/delete_pdf_link_Sans_Awards_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -13950,7 +13954,7 @@ router.post("/delete_Sans_Awards_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -14092,7 +14096,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -14136,7 +14140,7 @@ router.post("/delete_Zoo_Awards/:id", async (req, res) => {
 router.post("/delete_img_Zoo_Awards_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Zoo_Awards.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -14154,7 +14158,7 @@ router.post("/delete_pdf_link_Zoo_Awards_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -14173,7 +14177,7 @@ router.post("/delete_Zoo_Awards_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -14315,7 +14319,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -14351,7 +14355,7 @@ router.get("/Training_", async (req, res) => {
 });
 router.delete("/delete_academicsTraings/:id", async (req, res) => {
     const delete_user = await Training.findOneAndDelete({ _id: req.params.id });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -14397,7 +14401,7 @@ router.delete("/delete_GE_Options/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -14467,7 +14471,7 @@ router.delete("/deleteAdmission_FAQs/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -14537,7 +14541,7 @@ router.delete("/deleteAdmission_comm/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -14607,7 +14611,7 @@ router.delete("/deleteAdmission_Grievance_comm/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -14677,7 +14681,7 @@ router.delete("/deleteadmission_Fee_Structure/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -14745,7 +14749,7 @@ router.delete("/delete_Ethics/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -14820,7 +14824,7 @@ router.delete("/deleteAdmission/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -14888,7 +14892,7 @@ router.delete("/deleteeresources/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -14955,7 +14959,7 @@ router.delete("/deleteICC/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -15026,7 +15030,7 @@ router.delete("/deleteaccred/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -15095,7 +15099,7 @@ router.delete("/deleteHelpdesk/:id", async (req, res) => {
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log(delete_user.file_mimetype);
-            await unlinkAsync(delete_user.file_path);
+            deleteFile(delete_user.file_path);
             res.status(200).json(delete_user + "User deleted");
         }
     } catch (err) {
@@ -15167,7 +15171,7 @@ router.delete("/deleteAntiRagging/:id", async (req, res) => {
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log(delete_user.file_mimetype);
-            await unlinkAsync(delete_user.file_path);
+            deleteFile(delete_user.file_path);
             res.status(200).json(delete_user + "User deleted");
         }
     } catch (err) {
@@ -15233,7 +15237,7 @@ router.delete("/delete_Bio_Photo_Gallery/:id", async (req, res) => {
         _id: req.params.id,
     });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -15253,7 +15257,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15278,7 +15282,7 @@ router.delete("/delete_Hist_Photo_Gallery/:id", async (req, res) => {
         _id: req.params.id,
     });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -15297,7 +15301,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
 
@@ -15322,7 +15326,7 @@ router.delete("/delete_Hin_Photo_Gallery/:id", async (req, res) => {
         _id: req.params.id,
     });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -15341,7 +15345,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15365,7 +15369,7 @@ router.delete("/delete_Eng_Photo_Gallery/:id", async (req, res) => {
         _id: req.params.id,
     });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -15384,7 +15388,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15408,7 +15412,7 @@ router.delete("/delete_Eco_Photo_Gallery/:id", async (req, res) => {
         _id: req.params.id,
     });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -15427,7 +15431,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15451,7 +15455,7 @@ router.delete("/delete_Com_Photo_Gallery/:id", async (req, res) => {
         _id: req.params.id,
     });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -15470,7 +15474,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15494,7 +15498,7 @@ router.delete("/delete_Chem_Photo_Gallery/:id", async (req, res) => {
         _id: req.params.id,
     });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -15513,7 +15517,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15537,7 +15541,7 @@ router.delete("/delete_Bot_Photo_Gallery/:id", async (req, res) => {
         _id: req.params.id,
     });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -15556,7 +15560,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15580,7 +15584,7 @@ router.delete("/delete_Math_Photo_Gallery/:id", async (req, res) => {
         _id: req.params.id,
     });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -15599,7 +15603,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15624,7 +15628,7 @@ router.delete("/delete_Music_Photo_Gallery/:id", async (req, res) => {
         _id: req.params.id,
     });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -15643,7 +15647,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15668,7 +15672,7 @@ router.delete("/delete_NHE_Photo_Gallery/:id", async (req, res) => {
         _id: req.params.id,
     });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -15687,7 +15691,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15712,7 +15716,7 @@ router.delete("/delete_Philo_Photo_Gallery/:id", async (req, res) => {
         _id: req.params.id,
     });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -15731,7 +15735,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15753,7 +15757,7 @@ router.get("/PE_Gallery", async (req, res) => {
 router.delete("/delete_PE_Gallery/:id", async (req, res) => {
     const delete_user = await PE_Gallery.findOneAndDelete({ _id: req.params.id });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -15772,7 +15776,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15796,7 +15800,7 @@ router.delete("/delete_Physics_Gallery/:id", async (req, res) => {
         _id: req.params.id,
     });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -15815,7 +15819,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15839,7 +15843,7 @@ router.delete("/delete_Zoology_Gallery/:id", async (req, res) => {
         _id: req.params.id,
     });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -15858,7 +15862,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15882,7 +15886,7 @@ router.delete("/delete_Sanskrit_Gallery/:id", async (req, res) => {
         _id: req.params.id,
     });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -15901,7 +15905,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15925,7 +15929,7 @@ router.delete("/delete_Psychology_Gallery/:id", async (req, res) => {
         _id: req.params.id,
     });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -15944,7 +15948,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15966,7 +15970,7 @@ router.get("/PS_Gallery", async (req, res) => {
 router.delete("/delete_PS_Gallery/:id", async (req, res) => {
     const delete_user = await PS_Gallery.findOneAndDelete({ _id: req.params.id });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -15985,7 +15989,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -16010,7 +16014,7 @@ router.delete("/delete_Gallery_About/:id", async (req, res) => {
         _id: req.params.id,
     });
     console.log(delete_user.file_path);
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -16029,7 +16033,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -16057,7 +16061,7 @@ router.delete("/delete_StaffZone_forms/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -16170,7 +16174,7 @@ router.delete("/delete_archives_notice/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -16252,7 +16256,7 @@ router.delete("/delete_Bulletins_notice/:id", async (req, res) => {
         if (delete_user.file_mimetype === "text/link") {
             res.status(200).json(delete_user + "User deleted");
         } else {
-            await unlinkAsync(delete_user.file_path);
+            deleteFile(delete_user.file_path);
             res.status(200).json(delete_user + "User deleted");
         }
     } catch (err) {
@@ -16283,7 +16287,7 @@ router.delete("/delete_RTI_Footer/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -16410,7 +16414,7 @@ router.delete("/delete_Tender_Footer/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -16536,7 +16540,7 @@ router.delete("/delete_Public_notice/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -16658,7 +16662,7 @@ router.delete("/delete_Staff_notice/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -16774,7 +16778,7 @@ router.delete("/delete_Student_notice/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -16888,7 +16892,7 @@ router.post("/delete_Student_union/:id", async (req, res) => {
 router.post("/delete_img_Student_union_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Student_union.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -16906,7 +16910,7 @@ router.post("/delete_pdf_link_Student_union_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -16925,7 +16929,7 @@ router.post("/delete_Student_union_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -17067,7 +17071,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -17108,7 +17112,7 @@ router.post("/delete_Courses/:id", async (req, res) => {
 router.post("/delete_img_Courses_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Courses.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -17126,7 +17130,7 @@ router.post("/delete_pdf_link_Courses_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -17145,7 +17149,7 @@ router.post("/delete_Courses_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -17287,7 +17291,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -17328,7 +17332,7 @@ router.post("/delete_Placement_cell/:id", async (req, res) => {
 router.post("/delete_img_Placement_cell_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Placement_cell.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -17346,7 +17350,7 @@ router.post("/delete_pdf_link_Placement_cell_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -17365,7 +17369,7 @@ router.post("/delete_Placement_cell_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -17507,7 +17511,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -17548,7 +17552,7 @@ router.post("/delete_Equal_opp/:id", async (req, res) => {
 router.post("/delete_img_Equal_opp_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Equal_opp.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -17566,7 +17570,7 @@ router.post("/delete_pdf_link_Equal_opp_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -17585,7 +17589,7 @@ router.post("/delete_Equal_opp_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -17727,7 +17731,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -17796,7 +17800,7 @@ router.delete("/delete_Job_Opportunities/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -17910,7 +17914,7 @@ router.delete("/delete_StudentZone_forms/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -17976,7 +17980,7 @@ router.delete("/delete_Scholarship/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -18042,7 +18046,7 @@ router.delete("/delete_StudentZone_Examform/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -18108,7 +18112,7 @@ router.delete("/delete_StudentZone_Feepayment/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -18174,7 +18178,7 @@ router.delete("/delete_StudentZone_Internal/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -18241,7 +18245,7 @@ router.delete("/delete_Antiragg/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -18339,7 +18343,7 @@ router.get("/C_Acad_Cal", async (req, res) => {
 });
 router.delete("/delete_C_Acad_Cal/:id", async (req, res) => {
     const delete_user = await C_Acad_Cal.findOneAndDelete({ _id: req.params.id });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -18377,7 +18381,7 @@ router.get("/U_Acad_Cal", async (req, res) => {
 });
 router.delete("/delete_U_Acad_Cal/:id", async (req, res) => {
     const delete_user = await U_Acad_Cal.findOneAndDelete({ _id: req.params.id });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -18423,7 +18427,7 @@ router.post("/delete_Magz_and_News/:id", async (req, res) => {
 router.post("/delete_img_Magz_and_News_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Magz_and_News.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -18441,7 +18445,7 @@ router.post("/delete_pdf_link_Magz_and_News_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -18460,7 +18464,7 @@ router.post("/delete_Magz_and_News_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -18602,7 +18606,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -18648,7 +18652,7 @@ router.delete("/deleteuseful/:id", async (req, res) => {
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(delete_user.file_mimetype);
-        await unlinkAsync(delete_user.file_path);
+        deleteFile(delete_user.file_path);
         res.status(200).json(delete_user + "User deleted");
     }
 });
@@ -18715,7 +18719,7 @@ router.post("/delete_research_fac/:id", async (req, res) => {
 router.post("/delete_img_research_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await File.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -18803,7 +18807,7 @@ router.post("/delete_Student_Facilities_fac/:id", async (req, res) => {
 router.post("/delete_img_Student_Facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Student_Facilities.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -18856,7 +18860,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -18897,7 +18901,7 @@ router.post("/delete_Academics_Facilities_fac/:id", async (req, res) => {
 router.post("/delete_img_Academics_Facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Acad_Facilities.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -18950,7 +18954,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -18992,7 +18996,7 @@ router.post("/delete_Resource_centre_fac/:id", async (req, res) => {
 router.post("/delete_img_Resource_centre_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Resources_Innovation.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -19046,7 +19050,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -19087,7 +19091,7 @@ router.post("/delete_Philo_Publications/:id", async (req, res) => {
 router.post("/delete_img_Philo_Publications_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Philo_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -19105,7 +19109,7 @@ router.post("/delete_pdf_link_Philo_Publications_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -19124,7 +19128,7 @@ router.post("/delete_Philo_Publications_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -19266,7 +19270,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -19309,7 +19313,7 @@ router.post("/delete_Bio_Publications/:id", async (req, res) => {
 router.post("/delete_img_Bio_Publications_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Bio_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -19327,7 +19331,7 @@ router.post("/delete_pdf_link_Bio_Publications_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -19346,7 +19350,7 @@ router.post("/delete_Bio_Publications_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -19488,7 +19492,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -19529,7 +19533,7 @@ router.post("/delete_Bot_Publications/:id", async (req, res) => {
 router.post("/delete_img_Bot_Publications_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Bot_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -19547,7 +19551,7 @@ router.post("/delete_pdf_link_Bot_Publications_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -19566,7 +19570,7 @@ router.post("/delete_Bot_Publications_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -19708,7 +19712,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -19751,7 +19755,7 @@ router.post("/delete_Bio_Student_Achievement/:id", async (req, res) => {
 router.post("/delete_img_Bio_Student_Achievement_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Bio_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -19769,7 +19773,7 @@ router.post("/delete_pdf_link_Bio_Student_Achievement_fac/:id", async (req, res)
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -19788,7 +19792,7 @@ router.post("/delete_Bio_Student_Achievement_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -19930,7 +19934,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -19971,7 +19975,7 @@ router.post("/delete_Sans_Student_Achievement/:id", async (req, res) => {
 router.post("/delete_img_Sans_Student_Achievement_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Sans_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -19989,7 +19993,7 @@ router.post("/delete_pdf_link_Sans_Student_Achievement_fac/:id", async (req, res
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -20008,7 +20012,7 @@ router.post("/delete_Sans_Student_Achievement_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -20150,7 +20154,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -20191,7 +20195,7 @@ router.post("/delete_Zoo_Student_Achievement/:id", async (req, res) => {
 router.post("/delete_img_Zoo_Student_Achievement_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Zoo_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -20209,7 +20213,7 @@ router.post("/delete_pdf_link_Zoo_Student_Achievement_fac/:id", async (req, res)
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -20228,7 +20232,7 @@ router.post("/delete_Zoo_Student_Achievement_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -20370,7 +20374,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -20412,7 +20416,7 @@ router.post("/delete_PE_Publications/:id", async (req, res) => {
 router.post("/delete_img_PE_Publications_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await PE_Publications.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -20430,7 +20434,7 @@ router.post("/delete_pdf_link_PE_Publications_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -20449,7 +20453,7 @@ router.post("/delete_PE_Publications_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -20591,7 +20595,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -20634,7 +20638,7 @@ router.post("/delete_Chem_Student_Achievement/:id", async (req, res) => {
 router.post("/delete_img_Chem_Student_Achievement_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Chem_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -20652,7 +20656,7 @@ router.post("/delete_pdf_link_Chem_Student_Achievement_fac/:id", async (req, res
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -20671,7 +20675,7 @@ router.post("/delete_Chem_Student_Achievement_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -20813,7 +20817,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -20855,7 +20859,7 @@ router.post("/delete_Bot_Student_Achievement/:id", async (req, res) => {
 router.post("/delete_img_Bot_Student_Achievement_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Bot_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -20873,7 +20877,7 @@ router.post("/delete_pdf_link_Bot_Student_Achievement_fac/:id", async (req, res)
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -20892,7 +20896,7 @@ router.post("/delete_Bot_Student_Achievement_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -21034,7 +21038,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -21076,7 +21080,7 @@ router.post("/delete_Com_Student_Achievement/:id", async (req, res) => {
 router.post("/delete_img_Com_Student_Achievement_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Com_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -21094,7 +21098,7 @@ router.post("/delete_pdf_link_Com_Student_Achievement_fac/:id", async (req, res)
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -21113,7 +21117,7 @@ router.post("/delete_Com_Student_Achievement_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -21255,7 +21259,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -21297,7 +21301,7 @@ router.post("/delete_Eco_Student_Achievement/:id", async (req, res) => {
 router.post("/delete_img_Eco_Student_Achievement_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Eco_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -21315,7 +21319,7 @@ router.post("/delete_pdf_link_Eco_Student_Achievement_fac/:id", async (req, res)
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -21334,7 +21338,7 @@ router.post("/delete_Eco_Student_Achievement_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -21476,7 +21480,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -21518,7 +21522,7 @@ router.post("/delete_Eng_Student_Achievement/:id", async (req, res) => {
 router.post("/delete_img_Eng_Student_Achievement_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Eng_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -21536,7 +21540,7 @@ router.post("/delete_pdf_link_Eng_Student_Achievement_fac/:id", async (req, res)
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -21555,7 +21559,7 @@ router.post("/delete_Eng_Student_Achievement_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -21697,7 +21701,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -21739,7 +21743,7 @@ router.post("/delete_Hin_Student_Achievement/:id", async (req, res) => {
 router.post("/delete_img_Hin_Student_Achievement_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Hin_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -21757,7 +21761,7 @@ router.post("/delete_pdf_link_Hin_Student_Achievement_fac/:id", async (req, res)
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -21776,7 +21780,7 @@ router.post("/delete_Hin_Student_Achievement_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -21918,7 +21922,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -21960,7 +21964,7 @@ router.post("/delete_His_Student_Achievement/:id", async (req, res) => {
 router.post("/delete_img_His_Student_Achievement_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await His_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -21978,7 +21982,7 @@ router.post("/delete_pdf_link_His_Student_Achievement_fac/:id", async (req, res)
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -21997,7 +22001,7 @@ router.post("/delete_His_Student_Achievement_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -22139,7 +22143,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -22181,7 +22185,7 @@ router.post("/delete_Math_Student_Achievement/:id", async (req, res) => {
 router.post("/delete_img_Math_Student_Achievement_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Math_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -22199,7 +22203,7 @@ router.post("/delete_pdf_link_Math_Student_Achievement_fac/:id", async (req, res
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -22218,7 +22222,7 @@ router.post("/delete_Math_Student_Achievement_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -22360,7 +22364,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -22402,7 +22406,7 @@ router.post("/delete_Music_Student_Achievement/:id", async (req, res) => {
 router.post("/delete_img_Music_Student_Achievement_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Music_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -22420,7 +22424,7 @@ router.post("/delete_pdf_link_Music_Student_Achievement_fac/:id", async (req, re
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -22439,7 +22443,7 @@ router.post("/delete_Music_Student_Achievement_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -22581,7 +22585,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -22623,7 +22627,7 @@ router.post("/delete_NHE_Student_Achievement/:id", async (req, res) => {
 router.post("/delete_img_NHE_Student_Achievement_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await NHE_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -22641,7 +22645,7 @@ router.post("/delete_pdf_link_NHE_Student_Achievement_fac/:id", async (req, res)
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -22660,7 +22664,7 @@ router.post("/delete_NHE_Student_Achievement_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -22802,7 +22806,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -22844,7 +22848,7 @@ router.post("/delete_Philo_Student_Achievement/:id", async (req, res) => {
 router.post("/delete_img_Philo_Student_Achievement_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Philo_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -22862,7 +22866,7 @@ router.post("/delete_pdf_link_Philo_Student_Achievement_fac/:id", async (req, re
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -22881,7 +22885,7 @@ router.post("/delete_Philo_Student_Achievement_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -23023,7 +23027,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -23065,7 +23069,7 @@ router.post("/delete_PE_Student_Achievement/:id", async (req, res) => {
 router.post("/delete_img_PE_Student_Achievement_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await PE_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -23083,7 +23087,7 @@ router.post("/delete_pdf_link_PE_Student_Achievement_fac/:id", async (req, res) 
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -23102,7 +23106,7 @@ router.post("/delete_PE_Student_Achievement_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -23244,7 +23248,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -23286,7 +23290,7 @@ router.post("/delete_Phy_Student_Achievement/:id", async (req, res) => {
 router.post("/delete_img_Phy_Student_Achievement_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Phy_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -23304,7 +23308,7 @@ router.post("/delete_pdf_link_Phy_Student_Achievement_fac/:id", async (req, res)
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -23323,7 +23327,7 @@ router.post("/delete_Phy_Student_Achievement_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -23465,7 +23469,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -23507,7 +23511,7 @@ router.post("/delete_PS_Student_Achievement/:id", async (req, res) => {
 router.post("/delete_img_PS_Student_Achievement_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await PS_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -23525,7 +23529,7 @@ router.post("/delete_pdf_link_PS_Student_Achievement_fac/:id", async (req, res) 
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -23544,7 +23548,7 @@ router.post("/delete_PS_Student_Achievement_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -23686,7 +23690,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -23728,7 +23732,7 @@ router.post("/delete_Psy_Student_Achievement/:id", async (req, res) => {
 router.post("/delete_img_Psy_Student_Achievement_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Psy_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -23746,7 +23750,7 @@ router.post("/delete_pdf_link_Psy_Student_Achievement_fac/:id", async (req, res)
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -23765,7 +23769,7 @@ router.post("/delete_Psy_Student_Achievement_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -23907,7 +23911,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -23949,7 +23953,7 @@ router.post("/delete_Zoo_Facilities/:id", async (req, res) => {
 router.post("/delete_img_Zoo_Facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Zoo_Facilities.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -23967,7 +23971,7 @@ router.post("/delete_pdf_link_Zoo_Facilities_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -23986,7 +23990,7 @@ router.post("/delete_Zoo_Facilities_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -24128,7 +24132,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -24171,7 +24175,7 @@ router.post("/delete_Sanskrit_Facilities/:id", async (req, res) => {
 router.post("/delete_img_Sanskrit_Facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Sanskrit_Facilities.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -24189,7 +24193,7 @@ router.post("/delete_pdf_link_Sanskrit_Facilities_fac/:id", async (req, res) => 
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -24208,7 +24212,7 @@ router.post("/delete_Sanskrit_Facilities_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -24350,7 +24354,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -24393,7 +24397,7 @@ router.post("/delete_Psycho_facilities/:id", async (req, res) => {
 router.post("/delete_img_Psycho_facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Psychology_facilities.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -24411,7 +24415,7 @@ router.post("/delete_pdf_link_Psycho_facilities_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -24430,7 +24434,7 @@ router.post("/delete_Psycho_facilities_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -24572,7 +24576,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -24615,7 +24619,7 @@ router.post("/delete_Pol_Sci_Facilities/:id", async (req, res) => {
 router.post("/delete_img_Pol_Sci_Facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await PS_Facilities.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -24633,7 +24637,7 @@ router.post("/delete_pdf_link_Pol_Sci_Facilities_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -24652,7 +24656,7 @@ router.post("/delete_Pol_Sci_Facilities_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -24794,7 +24798,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -24837,7 +24841,7 @@ router.post("/delete_physics_facilities/:id", async (req, res) => {
 router.post("/delete_img_physics_facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Physics_Facilities.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -24855,7 +24859,7 @@ router.post("/delete_pdf_link_physics_facilities_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -24874,7 +24878,7 @@ router.post("/delete_physics_facilities_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -25016,7 +25020,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -25059,7 +25063,7 @@ router.post("/delete_PE_facilities/:id", async (req, res) => {
 router.post("/delete_img_PE_facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await PE_Facilities.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -25077,7 +25081,7 @@ router.post("/delete_pdf_link_PE_facilities_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -25096,7 +25100,7 @@ router.post("/delete_PE_facilities_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -25238,7 +25242,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -25281,7 +25285,7 @@ router.post("/delete_NHE_facilites/:id", async (req, res) => {
 router.post("/delete_img_NHE_facilites_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await NHE_fac.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -25299,7 +25303,7 @@ router.post("/delete_pdf_link_NHE_facilites_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -25318,7 +25322,7 @@ router.post("/delete_NHE_facilites_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -25460,7 +25464,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -25503,7 +25507,7 @@ router.post("/delete_Philo_facilites/:id", async (req, res) => {
 router.post("/delete_img_Philo_facilites_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Philo_fac.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -25521,7 +25525,7 @@ router.post("/delete_pdf_link_Philo_facilites_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -25540,7 +25544,7 @@ router.post("/delete_Philo_facilites_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -25682,7 +25686,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -25724,7 +25728,7 @@ router.post("/delete_Bio_Research_facilities/:id", async (req, res) => {
 router.post("/delete_img_Bio_Research_facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Bio_Research_fac.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -25742,7 +25746,7 @@ router.post("/delete_pdf_link_Bio_Research_facilities_fac/:id", async (req, res)
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -25761,7 +25765,7 @@ router.post("/delete_Bio_Research_facilities_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -25903,7 +25907,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -25945,7 +25949,7 @@ router.post("/delete_Bot_Research_facilities/:id", async (req, res) => {
 router.post("/delete_img_Bot_Research_facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Bot_Research_fac.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -25963,7 +25967,7 @@ router.post("/delete_pdf_link_Bot_Research_facilities_fac/:id", async (req, res)
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -25982,7 +25986,7 @@ router.post("/delete_Bot_Research_facilities_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -26124,7 +26128,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -26165,7 +26169,7 @@ router.post("/delete_Eng_Research_facilities/:id", async (req, res) => {
 router.post("/delete_img_Eng_Research_facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Eng_Research_fac.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -26183,7 +26187,7 @@ router.post("/delete_pdf_link_Eng_Research_facilities_fac/:id", async (req, res)
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -26202,7 +26206,7 @@ router.post("/delete_Eng_Research_facilities_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -26344,7 +26348,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -26386,7 +26390,7 @@ router.post("/delete_Hist_Research_facilities/:id", async (req, res) => {
 router.post("/delete_img_Hist_Research_facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Hist_Research_fac.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -26404,7 +26408,7 @@ router.post("/delete_pdf_link_Hist_Research_facilities_fac/:id", async (req, res
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -26423,7 +26427,7 @@ router.post("/delete_Hist_Research_facilities_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -26565,7 +26569,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -26606,7 +26610,7 @@ router.post("/delete_Music_Research_facilities/:id", async (req, res) => {
 router.post("/delete_img_Music_Research_facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Music_Research_fac.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -26624,7 +26628,7 @@ router.post("/delete_pdf_link_Music_Research_facilities_fac/:id", async (req, re
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -26643,7 +26647,7 @@ router.post("/delete_Music_Research_facilities_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -26785,7 +26789,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -26827,7 +26831,7 @@ router.post("/delete_Chem_Research_facilities/:id", async (req, res) => {
 router.post("/delete_img_Chem_Research_facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Chem_Research_fac.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -26845,7 +26849,7 @@ router.post("/delete_pdf_link_Chem_Research_facilities_fac/:id", async (req, res
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -26864,7 +26868,7 @@ router.post("/delete_Chem_Research_facilities_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -27006,7 +27010,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -27047,7 +27051,7 @@ router.post("/delete_Math_Research_facilities/:id", async (req, res) => {
 router.post("/delete_img_Math_Research_facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Math_Research_fac.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -27065,7 +27069,7 @@ router.post("/delete_pdf_link_Math_Research_facilities_fac/:id", async (req, res
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -27084,7 +27088,7 @@ router.post("/delete_Math_Research_facilities_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -27226,7 +27230,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -27267,7 +27271,7 @@ router.post("/delete_Eng_Research_facilities/:id", async (req, res) => {
 router.post("/delete_img_Eng_Research_facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Eng_Research_fac.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -27285,7 +27289,7 @@ router.post("/delete_pdf_link_Eng_Research_facilities_fac/:id", async (req, res)
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -27304,7 +27308,7 @@ router.post("/delete_Eng_Research_facilities_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -27446,7 +27450,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -27487,7 +27491,7 @@ router.post("/delete_Com_Research_facilities/:id", async (req, res) => {
 router.post("/delete_img_Com_Research_facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Com_Research_fac.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -27505,7 +27509,7 @@ router.post("/delete_pdf_link_Com_Research_facilities_fac/:id", async (req, res)
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -27524,7 +27528,7 @@ router.post("/delete_Com_Research_facilities_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -27666,7 +27670,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -27707,7 +27711,7 @@ router.post("/delete_Eco_Research_facilities/:id", async (req, res) => {
 router.post("/delete_img_Eco_Research_facilities_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Eco_Research_fac.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -27725,7 +27729,7 @@ router.post("/delete_pdf_link_Eco_Research_facilities_fac/:id", async (req, res)
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -27744,7 +27748,7 @@ router.post("/delete_Eco_Research_facilities_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -27886,7 +27890,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -28101,7 +28105,7 @@ router.post("/delete_Administration/:id", async (req, res) => {
 router.post("/delete_img_Administration_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await About_Administration.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -28119,7 +28123,7 @@ router.post("/delete_pdf_link_Administration_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -28138,7 +28142,7 @@ router.post("/delete_Administration_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -28280,7 +28284,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -28322,7 +28326,7 @@ router.post("/delete_Anti_harassment/:id", async (req, res) => {
 router.post("/delete_img_Anti_harassment_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Anti_harassment.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -28340,7 +28344,7 @@ router.post("/delete_pdf_link_Anti_harassment_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -28359,7 +28363,7 @@ router.post("/delete_Anti_harassment_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -28501,7 +28505,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -28544,7 +28548,7 @@ router.post("/delete_Bio_Association/:id", async (req, res) => {
 router.post("/delete_img_Bio_Association_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Bio_Association.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -28562,7 +28566,7 @@ router.post("/delete_pdf_link_Bio_Association_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -28581,7 +28585,7 @@ router.post("/delete_Bio_Association_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -28723,7 +28727,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -28765,7 +28769,7 @@ router.post("/delete_Complaints/:id", async (req, res) => {
 router.post("/delete_img_Complaints_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Complaints.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -28783,7 +28787,7 @@ router.post("/delete_pdf_link_Complaints_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -28802,7 +28806,7 @@ router.post("/delete_Complaints_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -28944,7 +28948,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -28989,7 +28993,7 @@ router.post("/delete_Stud_Hostel/:id", async (req, res) => {
 router.post("/delete_img_Stud_Hostel_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Stud_Hostel.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -28999,7 +29003,7 @@ router.post("/delete_pdf_link_Stud_Hostel_fac/:id", async (req, res) => {
         // const pdf = delete_user.img_data.pdf_path;
         if (req.body.file_mimetype !== "text/link") {
 
-            await unlinkAsync(req.body.file_path);
+            deleteFile(req.body.file_path);
             res.status(200).json(delete_user + "User deleted");
         } else {
 
@@ -29021,7 +29025,7 @@ router.post("/delete_Stud_Hostel_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -29119,7 +29123,7 @@ router.post(
 
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous notice, there is only a limit of 5");
 
             }
@@ -29224,7 +29228,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -29266,7 +29270,7 @@ router.post("/delete_IQAC/:id", async (req, res) => {
 router.post("/delete_img_IQAC_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await IQAC.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -29284,7 +29288,7 @@ router.post("/delete_pdf_link_IQAC_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -29303,7 +29307,7 @@ router.post("/delete_IQAC_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -29445,7 +29449,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -29487,7 +29491,7 @@ router.post("/delete_Studentact/:id", async (req, res) => {
 router.post("/delete_img_Studentact_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Studentact.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -29505,7 +29509,7 @@ router.post("/delete_pdf_link_Studentact_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -29524,7 +29528,7 @@ router.post("/delete_Studentact_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -29666,7 +29670,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -29709,7 +29713,7 @@ router.post("/delete_Vidyavistar/:id", async (req, res) => {
 router.post("/delete_img_Vidyavistar_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Vidyavistar.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -29727,7 +29731,7 @@ router.post("/delete_pdf_link_Vidyavistar_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -29746,7 +29750,7 @@ router.post("/delete_Vidyavistar_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -29888,7 +29892,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -29931,7 +29935,7 @@ router.post("/delete_Bot_Association/:id", async (req, res) => {
 router.post("/delete_img_Bot_Association_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Bot_Association.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -29949,7 +29953,7 @@ router.post("/delete_pdf_link_Bot_Association_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -29968,7 +29972,7 @@ router.post("/delete_Bot_Association_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -30110,7 +30114,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -30146,7 +30150,7 @@ router.delete("/delete_Eco_ProgramOffered/:id", async (req, res) => {
     const delete_user = await Eco_ProgramOffered.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -30191,7 +30195,7 @@ router.post("/delete_Eco_Awards/:id", async (req, res) => {
 router.post("/delete_img_Eco_Awards_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Eco_Awards.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -30209,7 +30213,7 @@ router.post("/delete_pdf_link_Eco_Awards_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -30228,7 +30232,7 @@ router.post("/delete_Eco_Awards_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -30370,7 +30374,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -30407,7 +30411,7 @@ router.delete("/delete_Eng_ProgramOffered/:id", async (req, res) => {
     const delete_user = await Eng_ProgramOffered.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -30452,7 +30456,7 @@ router.post("/delete_Eng_Awards/:id", async (req, res) => {
 router.post("/delete_img_Eng_Awards_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Eng_Awards.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -30470,7 +30474,7 @@ router.post("/delete_pdf_link_Eng_Awards_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -30489,7 +30493,7 @@ router.post("/delete_Eng_Awards_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -30631,7 +30635,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -30668,7 +30672,7 @@ router.delete("/delete_Hin_ProgramOffered/:id", async (req, res) => {
     const delete_user = await Hin_ProgramOffered.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -30713,7 +30717,7 @@ router.post("/delete_Hin_Awards/:id", async (req, res) => {
 router.post("/delete_img_Hin_Awards_fac/:id", async (req, res) => {
     // console.log(req.body.file_path1)
     const delete_user = await Hin_Awards.findOneAndUpdate({ _id: req.params.id }, { $pull: { "img_data.file_path": { _id: req.body.pid } } });
-    await unlinkAsync(req.body.file_path1);
+    deleteFile(req.body.file_path1);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -30731,7 +30735,7 @@ router.post("/delete_pdf_link_Hin_Awards_fac/:id", async (req, res) => {
 
     if (pdf[0].pdf_mimetype1 !== "text/link") {
         console.log(pdf[0].pdf_mimetype1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log(pdf[0].pdf_mimetype1);
@@ -30750,7 +30754,7 @@ router.post("/delete_Hin_Awards_para/:id", async (req, res) => {
                 _id: req.params.id,
             });
             const img = delete_user.img_data.file_path;
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(202).json(delete_user + "User deleted");
         }
     } catch (error) {
@@ -30892,7 +30896,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                await unlinkAsync(path);
+                deleteFile(path);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -30929,7 +30933,7 @@ router.delete("/delete_Hin_Magazine/:id", async (req, res) => {
     const delete_user = await Hin_Magazine.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 router.post(
@@ -30966,7 +30970,7 @@ router.post("/delete_Events_and_Activities/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
@@ -30974,7 +30978,7 @@ router.post("/delete_Events_and_Activities/:id", async (req, res) => {
     } else if (pdf[0].pdf_mimetype1 === "text/link") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
@@ -30982,8 +30986,8 @@ router.post("/delete_Events_and_Activities/:id", async (req, res) => {
 
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -31098,15 +31102,15 @@ router.post("/delete_bio_faculty/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -31193,15 +31197,15 @@ router.post("/delete_hin_faculty/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -31287,15 +31291,15 @@ router.post("/delete_eng_faculty/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -31381,15 +31385,15 @@ router.post("/delete_philo_faculty/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -31476,15 +31480,15 @@ router.post("/delete_NHE_faculty/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -31572,15 +31576,15 @@ router.post("/delete_Music_faculty/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -31666,15 +31670,15 @@ router.post("/delete_eco_faculty/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -31760,15 +31764,15 @@ router.post("/delete_chem_faculty/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -31854,15 +31858,15 @@ router.post("/delete_bot_faculty/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -31947,7 +31951,7 @@ router.post("/delete_bot_Lab_faculty/:id", async (req, res) => {
     // console.log()
     if (img[0].file_path1) {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
+        deleteFile(img[0].file_path1)
         res.status(200).json(delete_user + "User deleted");
     } else {
         console.log("Unsuccessfully deleted");
@@ -32008,15 +32012,15 @@ router.post("/delete_Hist_faculty/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -32102,15 +32106,15 @@ router.post("/delete_Math_faculty/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -32197,15 +32201,15 @@ router.post("/delete_Physics_fac/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -32293,15 +32297,15 @@ router.post("/delete_Political_Science_faculty/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -32387,15 +32391,15 @@ router.post("/delete_Psychology_faculty/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -32481,15 +32485,15 @@ router.post("/delete_Zoology_faculty/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -32575,15 +32579,15 @@ router.get("/Zoology_Faculty_download/:id", async (req, res) => {
 //     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
 //         if (img[0].file_path1) {
 //             await delete_user.deleteOne({ _id: req.params.id })
-//             await unlinkAsync(img[0].file_path1)
+//             deleteFile(img[0].file_path1)
 //             res.status(200).json(delete_user + "User deleted")
 //         } else {
 //             console.log("Unsuccessfully deleted")
 //         }
 //     } else {
 //         await delete_user.deleteOne({ _id: req.params.id })
-//         await unlinkAsync(img[0].file_path1)
-//         await unlinkAsync(pdf[0].pdf_path1)
+//         deleteFile(img[0].file_path1)
+//         deleteFile(pdf[0].pdf_path1)
 //         res.status(200).json("File Deleted")
 //     }
 // })
@@ -32663,15 +32667,15 @@ router.post("/delete_com_faculty/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -32753,7 +32757,7 @@ router.delete("/delete_Publications_res/:id", async (req, res) => {
     const delete_user = await Publications.findOneAndDelete({
         _id: req.params.id,
     });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -32816,7 +32820,7 @@ router.get("/Library_details", async (req, res) => {
 });
 router.delete("/delete_Library/:id", async (req, res) => {
     const delete_user = await Library.findOneAndDelete({ _id: req.params.id });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
@@ -32855,15 +32859,15 @@ router.post("/delete_Bio_Evetns/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -32944,15 +32948,15 @@ router.post("/delete_Botany_Events/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -33032,15 +33036,15 @@ router.post("/delete_Music_Events/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -33121,15 +33125,15 @@ router.post("/delete_NHE_Events/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -33210,15 +33214,15 @@ router.post("/delete_Philo_Events/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -33299,15 +33303,15 @@ router.post("/delete_PE_Events/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -33388,15 +33392,15 @@ router.post("/delete_Psychology_Events/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -33478,15 +33482,15 @@ router.post("/delete_Math_Events/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -33568,15 +33572,15 @@ router.post("/delete_Eco_Events/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -33657,15 +33661,15 @@ router.post("/delete_Phy_Events/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -33747,15 +33751,15 @@ router.post("/delete_Hin_Events/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -33836,15 +33840,15 @@ router.post("/delete_His_Events/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -33926,15 +33930,15 @@ router.post("/delete_Com_Events/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -34015,15 +34019,15 @@ router.post("/delete_Eng_Events/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -34105,15 +34109,15 @@ router.post("/delete_Com_Events/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -34195,15 +34199,15 @@ router.post("/delete_Chem_Events/:id", async (req, res) => {
     if (pdf[0].pdf_path1 === "../daulatram/public/images/uploads") {
         if (img[0].file_path1) {
             await delete_user.deleteOne({ _id: req.params.id });
-            await unlinkAsync(img[0].file_path1);
+            deleteFile(img[0].file_path1)
             res.status(200).json(delete_user + "User deleted");
         } else {
             console.log("Unsuccessfully deleted");
         }
     } else {
         await delete_user.deleteOne({ _id: req.params.id });
-        await unlinkAsync(img[0].file_path1);
-        await unlinkAsync(pdf[0].pdf_path1);
+        deleteFile(img[0].file_path1)
+        deleteFile(pdf[0].pdf_path1);
         res.status(200).json("File Deleted");
     }
 });
@@ -34282,7 +34286,7 @@ router.post(
 // Societies
 router.delete("/delete_Socities/:id", async (req, res) => {
     const delete_user = await Soc.findOneAndDelete({ _id: req.params.id });
-    await unlinkAsync(delete_user.file_path);
+    deleteFile(delete_user.file_path);
     res.status(200).json(delete_user + "User deleted");
 });
 
