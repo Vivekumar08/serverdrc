@@ -559,6 +559,7 @@ router.post("/AdminLogin", async (req, res) => {
                 res.status(402).json({ error: "Invalid Credentials" });
             } else {
                 console.log("Signin Successful");
+
                 res.status(200).json({ message: "user Signin Sucessfully" });
                 await UserLogin.save();
             }
@@ -933,7 +934,7 @@ router.post(
             // ;
             const file = new Mission({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetype1: req.file.mimetype,
                     value: false,
                 },
@@ -1008,7 +1009,7 @@ router.post(
             // ;
             const file = new Principal({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetype1: req.file.mimetype,
                     value: false,
                 },
@@ -1083,7 +1084,7 @@ router.post(
             // ;
             const file = new VicePrincipal({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetype1: req.file.mimetype,
                     value: false,
                 },
@@ -1237,7 +1238,7 @@ router.post(
             // ;
             const file = new Biochem_About({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetype1: req.file.mimetype,
                     value: false,
                 },
@@ -1312,7 +1313,7 @@ router.post(
             // ;
             const file = new Bot_About({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetype1: req.file.mimetype,
                     value: false,
                 },
@@ -1387,7 +1388,7 @@ router.post(
             // ;
             const file = new Chem_About({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetype1: req.file.mimetype,
                     value: false,
                 },
@@ -1462,7 +1463,7 @@ router.post(
             // ;
             const file = new Com_About({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetype1: req.file.mimetype,
                     value: false,
                 },
@@ -1537,7 +1538,7 @@ router.post(
             // ;
             const file = new Eco_About({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetype1: req.file.mimetype,
                     value: false,
                 },
@@ -1612,7 +1613,7 @@ router.post(
             // ;
             const file = new Eng_About({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetype1: req.file.mimetype,
                     value: false,
                 },
@@ -1687,7 +1688,7 @@ router.post(
             // ;
             const file = new Hin_About({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetype1: req.file.mimetype,
                     value: false,
                 },
@@ -1762,7 +1763,7 @@ router.post(
             // ;
             const file = new His_About({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetype1: req.file.mimetype,
                     value: false,
                 },
@@ -1837,7 +1838,7 @@ router.post(
             // ;
             const file = new Music_About({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetype1: req.file.mimetype,
                     value: false,
                 },
@@ -1913,7 +1914,7 @@ router.post(
             // ;
             const file = new NHE_About({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetype1: req.file.mimetype,
                     value: false,
                 },
@@ -1989,7 +1990,7 @@ router.post(
             // ;
             const file = new Philo_About({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetype1: req.file.mimetype,
                     value: false,
                 },
@@ -2065,7 +2066,7 @@ router.post(
             // ;
             const file = new PE_About({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetype1: req.file.mimetype,
                     value: false,
                 },
@@ -2141,7 +2142,7 @@ router.post(
             // ;
             const file = new Phy_About({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetyPhy1: req.file.mimetyPhy,
                     value: false,
                 },
@@ -2217,7 +2218,7 @@ router.post(
             // ;
             const file = new Pol_Sci_About({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetyPol_Sci1: req.file.mimetyPol_Sci,
                     value: false,
                 },
@@ -2293,7 +2294,7 @@ router.post(
             // ;
             const file = new Psy_About({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetyPsy1: req.file.mimetyPsy,
                     value: false,
                 },
@@ -2369,7 +2370,7 @@ router.post(
             // ;
             const file = new Sans_About({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetySans1: req.file.mimetySans,
                     value: false,
                 },
@@ -2445,7 +2446,7 @@ router.post(
             // ;
             const file = new Zoo_About({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetyZoo1: req.file.mimetyZoo,
                     value: false,
                 },
@@ -2521,7 +2522,7 @@ router.post(
             // ;
             const file = new Math_About({
                 "img_data.file_path": {
-                    file_path1: req.file.path,
+                    file_path1: req.file.filename,
                     file_mimetype1: req.file.mimetype,
                     value: false,
                 },
