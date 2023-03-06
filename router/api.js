@@ -16019,11 +16019,11 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Gallery_About.find()
             if (dat.length <= 25) {
                 const file = new Gallery_About({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
