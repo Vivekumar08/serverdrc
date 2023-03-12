@@ -557,8 +557,8 @@ router.post("/AdminLogin", async (req, res) => {
                 res.status(402).json({ error: "Invalid Credentials" });
             } else {
                 console.log("Signin Successful");
-                const token = jwt.sign({ id: UserLogin._id }, process.env.SECRET_KEY, { expiresIn: new Date(Date.now() + 25892000000) });
-                res.status(200).cookie("jwtoken", token, {expires: new Date(Date.now() + 25892000000)}).json({ token, userID: UserLogin._id, message: "user Signin Sucessfully" });
+                const token = jwt.sign({ id: UserLogin._id }, process.env.SECRET_KEY, { expiresIn: "3h" });
+                res.status(200).cookie("jwtoken", token, {expires: new Date(Date.now() + 3*3600*1000)}).json({ token, userID: UserLogin._id, message: "user Signin Sucessfully" });
                 await UserLogin.save();
             }
         } else {
