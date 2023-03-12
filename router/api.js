@@ -558,10 +558,7 @@ router.post("/AdminLogin", async (req, res) => {
             } else {
                 console.log("Signin Successful");
                 const token = jwt.sign({ id: UserLogin._id }, process.env.SECRET_KEY, { expiresIn: new Date(Date.now() + 25892000000) });
-                res.status(200).cookie("jwtoken", token, {
-                    expires: new Date(Date.now() + 25892000000),
-                    // httpOnly: true
-                }).json({ token, userID: UserLogin._id, message: "user Signin Sucessfully" });
+                res.status(200).cookie("jwtoken", token, {expires: new Date(Date.now() + 25892000000)}).json({ token, userID: UserLogin._id, message: "user Signin Sucessfully" });
                 await UserLogin.save();
             }
         } else {
