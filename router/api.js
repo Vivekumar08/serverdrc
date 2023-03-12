@@ -1,8 +1,6 @@
 const express = require("express");
-const path = require("path");
-// const fs = require("fs");
 const sanitize = require("mongo-sanitize");
-const { promisify } = require("util");
+const jwt = require("jsonwebtoken")
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
@@ -15,7 +13,6 @@ const {
     GridFsStorage
 } = require("multer-gridfs-storage");
 
-// const unlinkAsync = promisify(fs.unlink);
 
 // Admin 
 const User = require("../models/adminSchema");
@@ -334,6 +331,7 @@ const Complaints = require("../models/StudentZone/Complaints_schema")
 const Events_and_Activities = require("../models/Events_and_Activities_Schema")
 const Useful_Links = require("../models/Useful_Links_schema");
 const deleteFile = require("../utils/delete_file_gfs");
+const verifyToken = require("../middleware/auth");
 
 // SET STORAGE
 let bucket;
@@ -559,8 +557,11 @@ router.post("/AdminLogin", async (req, res) => {
                 res.status(402).json({ error: "Invalid Credentials" });
             } else {
                 console.log("Signin Successful");
-
-                res.status(200).json({ message: "user Signin Sucessfully" });
+                const token = jwt.sign({ id: UserLogin._id }, process.env.SECRET_KEY, { expiresIn: new Date(Date.now() + 25892000000) });
+                res.status(200).cookie("jwtoken", token, {
+                    expires: new Date(Date.now() + 25892000000),
+                    // httpOnly: true
+                }).json({ token, userID: UserLogin._id, message: "user Signin Sucessfully" });
                 await UserLogin.save();
             }
         } else {
@@ -571,6 +572,12 @@ router.post("/AdminLogin", async (req, res) => {
         console.log(err);
     }
 });
+
+router.get('/logout', verifyToken, (req, res) => {
+    res.clearCookie('jwtoken', { path: '/' })
+    res.status(200).send(req.user);
+});
+
 
 router.delete("/delete/:id", async (req, res) => {
     const delete_user = await User.findOneAndDelete({ _id: req.params.id });
@@ -680,14 +687,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Guidelines.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Guidelines.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -697,7 +704,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -718,7 +725,7 @@ router.get("/Guidelines_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -1124,11 +1131,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Roster({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -1165,11 +1172,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Bulletin({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -2644,12 +2651,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Sans_Association.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -2722,14 +2729,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Sans_Association.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Sans_Association.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -2739,7 +2746,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -2760,7 +2767,7 @@ router.get("/Sans_Association_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -2868,12 +2875,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await PS_Association.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -2946,14 +2953,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await PS_Association.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await PS_Association.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -2963,7 +2970,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -2984,7 +2991,7 @@ router.get("/PS_Association_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -3090,12 +3097,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Psycho_Association.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -3168,14 +3175,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Psycho_Association.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Psycho_Association.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -3185,7 +3192,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -3206,7 +3213,7 @@ router.get("/Psycho_Association_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -3313,12 +3320,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Physics_Association.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -3391,14 +3398,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Physics_Association.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Physics_Association.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -3408,7 +3415,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -3429,7 +3436,7 @@ router.get("/Physics_Association_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -3534,12 +3541,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await PE_Association.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -3612,14 +3619,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await PE_Association.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await PE_Association.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -3629,7 +3636,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -3650,7 +3657,7 @@ router.get("/PE_Association_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -3754,12 +3761,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Music_Awards.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -3832,14 +3839,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Music_Awards.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Music_Awards.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -3849,7 +3856,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -3870,7 +3877,7 @@ router.get("/Music_Awards_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -3975,12 +3982,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await NHE_Awards.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -4053,14 +4060,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await NHE_Awards.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await NHE_Awards.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -4070,7 +4077,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -4091,7 +4098,7 @@ router.get("/NHE_Awards_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -4197,12 +4204,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await NHE_Association.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -4275,14 +4282,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await NHE_Association.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await NHE_Association.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -4292,7 +4299,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -4313,7 +4320,7 @@ router.get("/NHE_Association_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -4418,12 +4425,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Philo_Association.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -4496,14 +4503,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Philo_Association.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Philo_Association.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -4513,7 +4520,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -4534,7 +4541,7 @@ router.get("/Philo_Association_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -4639,12 +4646,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Math_Association.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -4717,14 +4724,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Math_Association.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Math_Association.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -4734,7 +4741,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -4755,7 +4762,7 @@ router.get("/Math_Association_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -4860,12 +4867,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Music_Association.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -4938,14 +4945,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Music_Association.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Music_Association.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -4955,7 +4962,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -4976,7 +4983,7 @@ router.get("/Music_Association_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -5006,11 +5013,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Bio_ProgramOffered({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -5125,12 +5132,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Hist_Association.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -5203,14 +5210,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Hist_Association.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Hist_Association.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -5220,7 +5227,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -5241,7 +5248,7 @@ router.get("/Hist_Association_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -5348,12 +5355,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Bio_Awards.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -5426,14 +5433,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Bio_Awards.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Bio_Awards.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -5443,7 +5450,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -5464,7 +5471,7 @@ router.get("/Bio_Awards_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -5490,11 +5497,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Math_ProgramOffered({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -5609,12 +5616,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Math_Awards.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -5687,14 +5694,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Math_Awards.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Math_Awards.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -5704,7 +5711,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -5725,7 +5732,7 @@ router.get("/Math_Awards_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -5752,11 +5759,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new NHE_ProgramOffered({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -5793,11 +5800,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Philo_ProgramOffered({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -5832,11 +5839,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Hist_ProgramOffered({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -5951,12 +5958,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await His_Awards.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -6029,14 +6036,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await His_Awards.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await His_Awards.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -6046,7 +6053,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -6067,7 +6074,7 @@ router.get("/His_Awards_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -6092,11 +6099,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Com_ProgramOffered({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -6211,12 +6218,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Com_Awards.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -6289,14 +6296,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Com_Awards.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Com_Awards.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -6306,7 +6313,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -6327,7 +6334,7 @@ router.get("/Com_Awards_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -6353,11 +6360,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Chem_ProgramOffered({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -6472,12 +6479,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Chem_Awards.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -6550,14 +6557,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Chem_Awards.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Chem_Awards.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -6567,7 +6574,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -6588,7 +6595,7 @@ router.get("/Chem_Awards_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -6614,11 +6621,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Bot_ProgramOffered({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -6653,11 +6660,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Senior_list({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -6772,12 +6779,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Bot_Awards.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -6850,14 +6857,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Bot_Awards.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Bot_Awards.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -6867,7 +6874,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -6888,7 +6895,7 @@ router.get("/Bot_Awards_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -6914,11 +6921,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Chem_StuAch({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -6951,11 +6958,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Com_StuAch({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -6988,11 +6995,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Eco_StuAch({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -7025,11 +7032,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Eng_StuAch({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -7146,12 +7153,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Chem_Publications.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -7224,14 +7231,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Chem_Publications.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Chem_Publications.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -7241,7 +7248,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -7262,7 +7269,7 @@ router.get("/Chem_Publications_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -7368,12 +7375,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Com_Publications.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -7446,14 +7453,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Com_Publications.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Com_Publications.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -7463,7 +7470,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -7484,7 +7491,7 @@ router.get("/Com_Publications_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -7589,12 +7596,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Eco_Publications.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -7667,14 +7674,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Eco_Publications.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Eco_Publications.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -7684,7 +7691,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -7705,7 +7712,7 @@ router.get("/Eco_Publications_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -7811,12 +7818,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Eng_Publications.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -7889,14 +7896,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Eng_Publications.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Eng_Publications.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -7906,7 +7913,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -7927,7 +7934,7 @@ router.get("/Eng_Publications_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -8032,12 +8039,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Hist_Publications.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -8110,14 +8117,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Hist_Publications.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Hist_Publications.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -8127,7 +8134,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -8148,7 +8155,7 @@ router.get("/Hist_Publications_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -8252,12 +8259,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Music_Publications.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -8330,14 +8337,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Music_Publications.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Music_Publications.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -8347,7 +8354,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -8368,7 +8375,7 @@ router.get("/Music_Publications_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -8472,12 +8479,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await NHE_Publications.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -8550,14 +8557,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await NHE_Publications.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await NHE_Publications.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -8567,7 +8574,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -8588,7 +8595,7 @@ router.get("/NHE_Publications_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -8695,12 +8702,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Math_Publications.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -8773,14 +8780,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Math_Publications.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Math_Publications.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -8790,7 +8797,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -8811,7 +8818,7 @@ router.get("/Math_Publications_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -8917,12 +8924,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Hindi_Publications.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -8995,14 +9002,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Hindi_Publications.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Hindi_Publications.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -9012,7 +9019,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -9033,7 +9040,7 @@ router.get("/Hindi_Publications_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -9139,12 +9146,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Chem_Association.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -9217,14 +9224,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Chem_Association.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Chem_Association.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -9234,7 +9241,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -9255,7 +9262,7 @@ router.get("/Chem_Association_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -9360,12 +9367,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Com_Association.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -9438,14 +9445,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Com_Association.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Com_Association.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -9455,7 +9462,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -9476,7 +9483,7 @@ router.get("/Com_Association_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -9581,12 +9588,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Eco_Association.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -9659,14 +9666,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Eco_Association.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Eco_Association.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -9676,7 +9683,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -9697,7 +9704,7 @@ router.get("/Eco_Association_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -9803,12 +9810,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Eng_Association.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -9881,14 +9888,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Eng_Association.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Eng_Association.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -9898,7 +9905,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -9919,7 +9926,7 @@ router.get("/Eng_Association_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -10032,12 +10039,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Hindi_Association.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -10110,14 +10117,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Hindi_Association.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Hindi_Association.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -10127,7 +10134,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -10148,7 +10155,7 @@ router.get("/Hindi_Association_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -10171,11 +10178,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Chem_Fac({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -10208,11 +10215,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Com_Fac({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -10245,11 +10252,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Eco_Fac({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -10365,12 +10372,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Hindi_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -10443,14 +10450,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Hindi_Research_fac.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Hindi_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -10460,7 +10467,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -10481,7 +10488,7 @@ router.get("/Hindi_Research_facilities_upload_download/:id", async (req, res) =>
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -10504,11 +10511,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Eco_Eve({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -10541,11 +10548,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Eng_Eve({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -10582,11 +10589,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new PE_ProgramOffered({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -10622,11 +10629,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Physics_ProgramOffered({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -10661,11 +10668,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new PolSci_ProgramOffered({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -10700,11 +10707,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Psychology_ProgramOffered({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -10739,11 +10746,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Sanskrit_ProgramOffered({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -10858,12 +10865,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Zoo_Association.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -10936,14 +10943,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Zoo_Association.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Zoo_Association.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -10953,7 +10960,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -10974,7 +10981,7 @@ router.get("/Zoo_Association_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -11001,11 +11008,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Zoology_ProgramOffered({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -11039,13 +11046,13 @@ router.post(
     async (req, res) => {
         try {
             const { name, Designation, Qualification, email } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new PE_Fac({
                 name,
                 Designation,
                 Qualification,
                 email,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -11160,12 +11167,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Philo_Awards.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -11238,14 +11245,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Philo_Awards.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Philo_Awards.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -11255,7 +11262,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -11276,7 +11283,7 @@ router.get("/Philo_Awards_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -11382,12 +11389,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await PE_Awards.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -11460,14 +11467,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await PE_Awards.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await PE_Awards.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -11477,7 +11484,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -11498,7 +11505,7 @@ router.get("/PE_Awards_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -11604,12 +11611,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Phy_Awards.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -11682,14 +11689,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Phy_Awards.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Phy_Awards.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -11699,7 +11706,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -11720,7 +11727,7 @@ router.get("/Phy_Awards_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -11767,12 +11774,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetyPolSci } = req.file;
-            // console.log(path, mimetyPolSci)
+            const { filename, mimetyPolSci } = req.file;
+            // console.log(filename, mimetyPolSci)
             const data = await PolSci_Events.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetyPolSci1: mimetyPolSci,
                         value: true,
                     },
@@ -11799,12 +11806,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetyPolSci } = req.file;
-            // console.log(title,path,mimetyPolSci)
+            const { filename, mimetyPolSci } = req.file;
+            // console.log(title,filename,mimetyPolSci)
             const file = new PolSci_Events({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetyPolSci1: mimetyPolSci },
+                "img_data.file_path": { file_path1: filename, file_mimetyPolSci1: mimetyPolSci },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -11856,12 +11863,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetySanskrit } = req.file;
-            // console.log(path, mimetySanskrit)
+            const { filename, mimetySanskrit } = req.file;
+            // console.log(filename, mimetySanskrit)
             const data = await Sanskrit_Events.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetySanskrit1: mimetySanskrit,
                         value: true,
                     },
@@ -11888,12 +11895,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetySanskrit } = req.file;
-            // console.log(title,path,mimetySanskrit)
+            const { filename, mimetySanskrit } = req.file;
+            // console.log(title,filename,mimetySanskrit)
             const file = new Sanskrit_Events({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetySanskrit1: mimetySanskrit },
+                "img_data.file_path": { file_path1: filename, file_mimetySanskrit1: mimetySanskrit },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -11945,12 +11952,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetyZoology } = req.file;
-            // console.log(path, mimetyZoology)
+            const { filename, mimetyZoology } = req.file;
+            // console.log(filename, mimetyZoology)
             const data = await Zoology_Events.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetyZoology1: mimetyZoology,
                         value: true,
                     },
@@ -11977,12 +11984,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetyZoology } = req.file;
-            // console.log(title,path,mimetyZoology)
+            const { filename, mimetyZoology } = req.file;
+            // console.log(title,filename,mimetyZoology)
             const file = new Zoology_Events({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetyZoology1: mimetyZoology },
+                "img_data.file_path": { file_path1: filename, file_mimetyZoology1: mimetyZoology },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -12013,11 +12020,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Physics_Stuachieve({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -12052,11 +12059,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Sanskrit_Stuachieve({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -12091,11 +12098,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Zoology_Stuachieve({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -12130,11 +12137,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Bot_Publications({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -12249,12 +12256,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Psycho_Publications.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -12327,14 +12334,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Psycho_Publications.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Psycho_Publications.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -12344,7 +12351,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -12365,7 +12372,7 @@ router.get("/Psycho_Publications_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -12475,12 +12482,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Physics_Publications.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -12553,14 +12560,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Physics_Publications.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Physics_Publications.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -12570,7 +12577,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -12591,7 +12598,7 @@ router.get("/Physics_Publications_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -12617,11 +12624,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new PS_Publications({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -12735,12 +12742,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await PS_Publications.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -12813,14 +12820,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await PS_Publications.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await PS_Publications.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -12830,7 +12837,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -12851,7 +12858,7 @@ router.get("/PS_Publications_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -12958,12 +12965,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Zoo_Publications.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -13036,14 +13043,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Zoo_Publications.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Zoo_Publications.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -13053,7 +13060,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -13074,7 +13081,7 @@ router.get("/Zoo_Publications_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -13179,12 +13186,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Sans_Publications.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -13257,14 +13264,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Sans_Publications.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Sans_Publications.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -13274,7 +13281,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -13295,7 +13302,7 @@ router.get("/Sans_Publications_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -13321,11 +13328,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Physics_Association({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -13361,11 +13368,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Physics_Newsletter({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -13399,11 +13406,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new PS_Association({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -13437,11 +13444,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Sanskrit_Association({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -13556,12 +13563,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await PS_Awards.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -13634,14 +13641,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await PS_Awards.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await PS_Awards.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -13651,7 +13658,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -13672,7 +13679,7 @@ router.get("/PS_Awards_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -13778,12 +13785,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Psy_Awards.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -13856,14 +13863,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Psy_Awards.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Psy_Awards.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -13873,7 +13880,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -13894,7 +13901,7 @@ router.get("/Psy_Awards_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -14001,12 +14008,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Sans_Awards.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -14079,14 +14086,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Sans_Awards.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Sans_Awards.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -14096,7 +14103,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -14117,7 +14124,7 @@ router.get("/Sans_Awards_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -14224,12 +14231,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Zoo_Awards.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -14302,14 +14309,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Zoo_Awards.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Zoo_Awards.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -14319,7 +14326,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -14340,7 +14347,7 @@ router.get("/Zoo_Awards_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -14365,11 +14372,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Training({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -14433,11 +14440,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new GE_Options({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -14503,11 +14510,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Admission_FAQs({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -14573,11 +14580,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Admission_comm({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -14643,11 +14650,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Admission_Grievance({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -14713,11 +14720,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Fee_Structure({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -14782,7 +14789,7 @@ router.post(
     async (req, res) => {
         try {
             const { title, link, heading } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             if (!title || !link || !heading) {
                 return res
                     .status(400)
@@ -14792,7 +14799,7 @@ router.post(
                 heading,
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -14856,11 +14863,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Adminssion({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -14923,11 +14930,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Eresources({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -14990,11 +14997,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Icc({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -15062,11 +15069,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Accred({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -15134,11 +15141,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new helpdesk({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -15206,11 +15213,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Ragging({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -15246,18 +15253,18 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Bio_Photo_Gallery.find()
             if (dat.length <= 5) {
 
                 const file = new Bio_Photo_Gallery({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15291,17 +15298,17 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Hist_Photo_Gallery.find()
             if (dat.length <= 5) {
                 const file = new Hist_Photo_Gallery({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
 
@@ -15335,17 +15342,17 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Hin_Photo_Gallery.find()
             if (dat.length <= 5) {
                 const file = new Hin_Photo_Gallery({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15378,17 +15385,17 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Eng_Photo_Gallery.find()
             if (dat.length <= 5) {
                 const file = new Eng_Photo_Gallery({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15421,17 +15428,17 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Eco_Photo_Gallery.find()
             if (dat.length <= 5) {
                 const file = new Eco_Photo_Gallery({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15464,17 +15471,17 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Com_Photo_Gallery.find()
             if (dat.length <= 5) {
                 const file = new Com_Photo_Gallery({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15507,17 +15514,17 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Chem_Photo_Gallery.find()
             if (dat.length <= 5) {
                 const file = new Chem_Photo_Gallery({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15550,17 +15557,17 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Bot_Photo_Gallery.find()
             if (dat.length <= 5) {
                 const file = new Bot_Photo_Gallery({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15593,17 +15600,17 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Math_Photo_Gallery.find()
             if (dat.length <= 5) {
                 const file = new Math_Photo_Gallery({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15637,17 +15644,17 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Music_Photo_Gallery.find()
             if (dat.length <= 5) {
                 const file = new Music_Photo_Gallery({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15681,17 +15688,17 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await NHE_Photo_Gallery.find()
             if (dat.length <= 5) {
                 const file = new NHE_Photo_Gallery({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15725,17 +15732,17 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Philo_Photo_Gallery.find()
             if (dat.length <= 5) {
                 const file = new Philo_Photo_Gallery({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15766,17 +15773,17 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await PE_Gallery.find()
             if (dat.length <= 5) {
                 const file = new PE_Gallery({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15809,17 +15816,17 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Physics_Gallery.find()
             if (dat.length <= 5) {
                 const file = new Physics_Gallery({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15852,17 +15859,17 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Zoology_Gallery.find()
             if (dat.length <= 5) {
                 const file = new Zoology_Gallery({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15895,17 +15902,17 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Sanskrit_Gallery.find()
             if (dat.length <= 5) {
                 const file = new Sanskrit_Gallery({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15938,17 +15945,17 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Psychology_Gallery.find()
             if (dat.length <= 5) {
                 const file = new Psychology_Gallery({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -15979,17 +15986,17 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await PS_Gallery.find()
             if (dat.length <= 5) {
                 const file = new PS_Gallery({
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -16033,7 +16040,7 @@ router.post(
                 await file.save();
                 res.send("file uploaded successfully.");
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -16093,11 +16100,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Staff_Forms({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -16342,18 +16349,18 @@ router.post(
     async (req, res) => {
         try {
             const { date, title, date_exp, new_, filter } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             var date_regex = /^\d{2}\/\d{2}\/\d{4}$/;
             if (new_ == true) {
                 console.log(date, title, date_exp, new_, filter)
-                console.log(path, mimetype)
+                console.log(filename, mimetype)
                 if (date_regex.test(date_exp)) {
                     const user = new RTI_Footer({
                         date,
                         title,
                         date_exp,
                         new_,
-                        file_path: path,
+                        file_path: filename,
                         file_mimetype: mimetype,
                         filter
                     });
@@ -16366,12 +16373,12 @@ router.post(
                 }
             } else {
                 console.log(date, title, date_exp, filter)
-                console.log(path, mimetype)
+                console.log(filename, mimetype)
                 const user = new RTI_Footer({
                     date,
                     title,
                     new_,
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                     filter
                 });
@@ -16469,18 +16476,18 @@ router.post(
     async (req, res) => {
         try {
             const { date, title, date_exp, new_, filter } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             var date_regex = /^\d{2}\/\d{2}\/\d{4}$/;
             if (new_ == true) {
                 console.log(date, title, date_exp, new_, filter)
-                console.log(path, mimetype)
+                console.log(filename, mimetype)
                 if (date_regex.test(date_exp)) {
                     const user = new Tender_Footer({
                         date,
                         title,
                         date_exp,
                         new_,
-                        file_path: path,
+                        file_path: filename,
                         file_mimetype: mimetype,
                         filter
                     });
@@ -16493,12 +16500,12 @@ router.post(
                 }
             } else {
                 console.log(date, title, date_exp, filter)
-                console.log(path, mimetype)
+                console.log(filename, mimetype)
                 const user = new Tender_Footer({
                     date,
                     title,
                     new_,
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                     filter
                 });
@@ -16599,7 +16606,7 @@ router.post(
     async (req, res) => {
         try {
             const { date, title, date_exp, new_ } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             var date_regex = /^\d{2}\/\d{2}\/\d{4}$/;
             if (new_) {
                 if (date_regex.test(date_exp)) {
@@ -16608,7 +16615,7 @@ router.post(
                         title,
                         date_exp,
                         new_,
-                        file_path: path,
+                        file_path: filename,
                         file_mimetype: mimetype,
                     });
                     await user.save();
@@ -16622,7 +16629,7 @@ router.post(
                     date,
                     title,
                     new_,
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await user.save();
@@ -16717,7 +16724,7 @@ router.post(
     async (req, res) => {
         try {
             const { date, title, date_exp, new_ } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             var date_regex = /^\d{2}\/\d{2}\/\d{4}$/;
             if (new_) {
                 if (date_regex.test(date_exp)) {
@@ -16726,7 +16733,7 @@ router.post(
                         title,
                         date_exp,
                         new_,
-                        file_path: path,
+                        file_path: filename,
                         file_mimetype: mimetype,
                     });
                     await user.save();
@@ -16740,7 +16747,7 @@ router.post(
                     date,
                     title,
                     new_,
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await user.save();
@@ -16833,7 +16840,7 @@ router.post(
     async (req, res) => {
         try {
             const { date, title, date_exp, new_ } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             var date_regex = /^\d{2}\/\d{2}\/\d{4}$/;
             if (new_) {
                 if (date_regex.test(date_exp)) {
@@ -16842,7 +16849,7 @@ router.post(
                         title,
                         date_exp,
                         new_,
-                        file_path: path,
+                        file_path: filename,
                         file_mimetype: mimetype,
                     });
                     await user.save();
@@ -16858,7 +16865,7 @@ router.post(
                     date,
                     title,
                     new_,
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await user.save();
@@ -16976,12 +16983,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Student_union.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -17054,14 +17061,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Student_union.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Student_union.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -17071,7 +17078,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -17092,7 +17099,7 @@ router.get("/Student_union_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -17196,12 +17203,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Courses.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -17274,14 +17281,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Courses.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Courses.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -17291,7 +17298,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -17312,7 +17319,7 @@ router.get("/Courses_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -17416,12 +17423,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Placement_cell.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -17494,14 +17501,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Placement_cell.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Placement_cell.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -17511,7 +17518,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -17532,7 +17539,7 @@ router.get("/Placement_cell_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -17636,12 +17643,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Equal_opp.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -17714,14 +17721,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Equal_opp.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Equal_opp.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -17731,7 +17738,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -17752,7 +17759,7 @@ router.get("/Equal_opp_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -17855,7 +17862,7 @@ router.post(
     async (req, res) => {
         try {
             const { date, title, link, date_exp, new_ } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             var date_regex = /^\d{2}\/\d{2}\/\d{4}$/;
             if (new_) {
                 if (date_regex.test(date_exp)) {
@@ -17865,7 +17872,7 @@ router.post(
                         link,
                         date_exp,
                         new_,
-                        file_path: path,
+                        file_path: filename,
                         file_mimetype: mimetype,
                     });
                     await user.save();
@@ -17880,7 +17887,7 @@ router.post(
                     title,
                     link,
                     new_,
-                    file_path: path,
+                    file_path: filename,
                     file_mimetype: mimetype,
                 });
                 await user.save();
@@ -17946,11 +17953,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Student_forms({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -18012,11 +18019,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Scholarship({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -18078,11 +18085,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Student_Examform({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -18144,11 +18151,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Student_Feepayment({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -18210,11 +18217,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Student_Internal({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -18278,11 +18285,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Antiragg({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -18353,11 +18360,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new C_Acad_Cal({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -18391,11 +18398,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new U_Acad_Cal({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -18511,12 +18518,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Magz_and_News.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -18589,14 +18596,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Magz_and_News.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 1) {
                 const data = await Magz_and_News.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -18606,7 +18613,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -18627,7 +18634,7 @@ router.get("/Magz_and_News_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -18684,11 +18691,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Useful_Links({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -18755,12 +18762,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path,mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename,mimetype)
             const dat = await File.findOneAndUpdate({ _id: req.params.id }, {
                 $push: {
                     "img_data.file_path": {
-                        file_path1: path,
+                        file_path1: filename,
                         file_mimetype1: mimetype,
                     },
                 },
@@ -18787,7 +18794,7 @@ router.get("/research_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -18843,14 +18850,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Student_Facilities.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Student_Facilities.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -18860,7 +18867,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -18881,7 +18888,7 @@ router.get("/Student_Facilities_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -18937,14 +18944,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Acad_Facilities.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Acad_Facilities.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -18954,7 +18961,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -18975,7 +18982,7 @@ router.get("/Academics_Facilities_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -19032,14 +19039,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Resources_Innovation.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Resources_Innovation.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
 
@@ -19050,7 +19057,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -19071,7 +19078,7 @@ router.get("/Resource_center_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -19175,12 +19182,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Philo_Publications.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -19253,14 +19260,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Philo_Publications.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Philo_Publications.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -19270,7 +19277,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -19291,7 +19298,7 @@ router.get("/Philo_Publications_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -19397,12 +19404,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Bio_Publications.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -19475,14 +19482,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Bio_Publications.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Bio_Publications.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -19492,7 +19499,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -19513,7 +19520,7 @@ router.get("/Bio_Publications_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -19617,12 +19624,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Bot_Publications.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -19695,14 +19702,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Bot_Publications.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Bot_Publications.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -19712,7 +19719,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -19733,7 +19740,7 @@ router.get("/Bot_Publications_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -19839,12 +19846,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Bio_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -19917,14 +19924,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Bio_Student_Achieve.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Bio_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -19934,7 +19941,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -19955,7 +19962,7 @@ router.get("/Bio_Student_Achievement_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -20059,12 +20066,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Sans_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -20137,14 +20144,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Sans_Student_Achieve.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Sans_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -20154,7 +20161,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -20175,7 +20182,7 @@ router.get("/Sans_Student_Achievement_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -20279,12 +20286,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Zoo_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -20357,14 +20364,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Zoo_Student_Achieve.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Zoo_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -20374,7 +20381,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -20395,7 +20402,7 @@ router.get("/Zoo_Student_Achievement_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -20500,12 +20507,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await PE_Publications.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -20578,14 +20585,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await PE_Publications.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await PE_Publications.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -20595,7 +20602,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -20616,7 +20623,7 @@ router.get("/PE_Publications_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -20722,12 +20729,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Chem_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -20800,14 +20807,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Chem_Student_Achieve.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Chem_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -20817,7 +20824,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -20838,7 +20845,7 @@ router.get("/Chem_Student_Achievement_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -20943,12 +20950,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Bot_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -21021,14 +21028,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Bot_Student_Achieve.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Bot_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -21038,7 +21045,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -21059,7 +21066,7 @@ router.get("/Bot_Student_Achievement_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -21164,12 +21171,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Com_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -21242,14 +21249,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Com_Student_Achieve.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Com_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -21259,7 +21266,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -21280,7 +21287,7 @@ router.get("/Com_Student_Achievement_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -21385,12 +21392,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Eco_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -21463,14 +21470,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Eco_Student_Achieve.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Eco_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -21480,7 +21487,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -21501,7 +21508,7 @@ router.get("/Eco_Student_Achievement_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -21606,12 +21613,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Eng_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -21684,14 +21691,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Eng_Student_Achieve.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Eng_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -21701,7 +21708,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -21722,7 +21729,7 @@ router.get("/Eng_Student_Achievement_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -21827,12 +21834,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Hin_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -21905,14 +21912,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Hin_Student_Achieve.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Hin_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -21922,7 +21929,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -21943,7 +21950,7 @@ router.get("/Hin_Student_Achievement_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -22048,12 +22055,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await His_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -22126,14 +22133,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await His_Student_Achieve.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await His_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -22143,7 +22150,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -22164,7 +22171,7 @@ router.get("/His_Student_Achievement_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -22269,12 +22276,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Math_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -22347,14 +22354,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Math_Student_Achieve.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Math_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -22364,7 +22371,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -22385,7 +22392,7 @@ router.get("/Math_Student_Achievement_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -22490,12 +22497,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Music_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -22568,14 +22575,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Music_Student_Achieve.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Music_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -22585,7 +22592,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -22606,7 +22613,7 @@ router.get("/Music_Student_Achievement_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -22711,12 +22718,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await NHE_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -22789,14 +22796,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await NHE_Student_Achieve.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await NHE_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -22806,7 +22813,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -22827,7 +22834,7 @@ router.get("/NHE_Student_Achievement_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -22932,12 +22939,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Philo_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -23010,14 +23017,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Philo_Student_Achieve.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Philo_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -23027,7 +23034,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -23048,7 +23055,7 @@ router.get("/Philo_Student_Achievement_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -23153,12 +23160,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await PE_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -23231,14 +23238,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await PE_Student_Achieve.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await PE_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -23248,7 +23255,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -23269,7 +23276,7 @@ router.get("/PE_Student_Achievement_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -23374,12 +23381,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Phy_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -23452,14 +23459,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Phy_Student_Achieve.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Phy_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -23469,7 +23476,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -23490,7 +23497,7 @@ router.get("/Phy_Student_Achievement_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -23595,12 +23602,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await PS_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -23673,14 +23680,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await PS_Student_Achieve.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await PS_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -23690,7 +23697,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -23711,7 +23718,7 @@ router.get("/PS_Student_Achievement_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -23816,12 +23823,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Psy_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -23894,14 +23901,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Psy_Student_Achieve.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Psy_Student_Achieve.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -23911,7 +23918,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -23932,7 +23939,7 @@ router.get("/Psy_Student_Achievement_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -24037,12 +24044,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Zoo_Facilities.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -24115,14 +24122,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Zoo_Facilities.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Zoo_Facilities.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -24132,7 +24139,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -24153,7 +24160,7 @@ router.get("/Zoo_Facilities_upload_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -24259,12 +24266,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Sanskrit_Facilities.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -24337,14 +24344,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Sanskrit_Facilities.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Sanskrit_Facilities.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -24354,7 +24361,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -24375,7 +24382,7 @@ router.get("/Sanskrit_Facilities_upload_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -24481,12 +24488,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Psychology_facilities.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -24559,14 +24566,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Psychology_facilities.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Psychology_facilities.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -24576,7 +24583,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -24597,7 +24604,7 @@ router.get("/Psycho_facilities_upload_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -24703,12 +24710,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await PS_Facilities.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -24781,14 +24788,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await PS_Facilities.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await PS_Facilities.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -24798,7 +24805,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -24819,7 +24826,7 @@ router.get("/Pol_Sci_Facilities_upload_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -24925,12 +24932,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Physics_Facilities.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -25003,14 +25010,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Physics_Facilities.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Physics_Facilities.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -25020,7 +25027,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -25041,7 +25048,7 @@ router.get("/physics_facilities_upload_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -25147,12 +25154,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await PE_Facilities.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -25225,14 +25232,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await PE_Facilities.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await PE_Facilities.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -25242,7 +25249,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -25263,7 +25270,7 @@ router.get("/PE_facilities_upload_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -25369,12 +25376,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await NHE_fac.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -25447,14 +25454,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await NHE_fac.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await NHE_fac.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -25464,7 +25471,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -25485,7 +25492,7 @@ router.get("/NHE_facilities_upload_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -25591,12 +25598,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Philo_fac.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -25669,14 +25676,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Philo_fac.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Philo_fac.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -25686,7 +25693,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -25707,7 +25714,7 @@ router.get("/Philo_facilites_upload_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -25812,12 +25819,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Bio_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -25890,14 +25897,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Bio_Research_fac.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Bio_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -25907,7 +25914,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -25928,7 +25935,7 @@ router.get("/Bio_Research_facilities_upload_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -26033,12 +26040,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Bot_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -26111,14 +26118,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Bot_Research_fac.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Bot_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -26128,7 +26135,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -26149,7 +26156,7 @@ router.get("/Bot_Research_facilities_upload_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -26253,12 +26260,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Eng_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -26331,14 +26338,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Eng_Research_fac.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Eng_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -26348,7 +26355,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -26369,7 +26376,7 @@ router.get("/Eng_Research_facilities_upload_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -26474,12 +26481,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Hist_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -26552,14 +26559,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Hist_Research_fac.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Hist_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -26569,7 +26576,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -26590,7 +26597,7 @@ router.get("/Hist_Research_facilities_upload_download/:id", async (req, res) => 
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -26694,12 +26701,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Music_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -26772,14 +26779,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Music_Research_fac.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Music_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -26789,7 +26796,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -26810,7 +26817,7 @@ router.get("/Music_Research_facilities_upload_download/:id", async (req, res) =>
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -26915,12 +26922,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Chem_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -26993,14 +27000,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Chem_Research_fac.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Chem_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -27010,7 +27017,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -27031,7 +27038,7 @@ router.get("/Chem_Research_facilities_upload_download/:id", async (req, res) => 
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -27135,12 +27142,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Math_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -27213,14 +27220,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Math_Research_fac.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Math_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -27230,7 +27237,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -27251,7 +27258,7 @@ router.get("/Math_Research_facilities_upload_download/:id", async (req, res) => 
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -27355,12 +27362,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Eng_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -27433,14 +27440,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Eng_Research_fac.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Eng_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -27450,7 +27457,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -27471,7 +27478,7 @@ router.get("/Eng_Research_facilities_upload_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -27575,12 +27582,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Com_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -27653,14 +27660,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Com_Research_fac.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Com_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -27670,7 +27677,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -27691,7 +27698,7 @@ router.get("/Com_Research_facilities_upload_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -27795,12 +27802,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Eco_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -27873,14 +27880,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Eco_Research_fac.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Eco_Research_fac.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -27890,7 +27897,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -27911,7 +27918,7 @@ router.get("/Eco_Research_facilities_upload_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -27998,7 +28005,7 @@ router.get("/Staff_Council_Comm_upload_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -28083,7 +28090,7 @@ router.get("/Student_Grievance_upload_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -28189,12 +28196,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await About_Administration.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -28267,14 +28274,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await About_Administration.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await About_Administration.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -28284,7 +28291,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -28305,7 +28312,7 @@ router.get("/Administration_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -28410,12 +28417,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Anti_harassment.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -28488,14 +28495,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Anti_harassment.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Anti_harassment.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -28505,7 +28512,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -28526,7 +28533,7 @@ router.get("/Anti_harassment_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -28632,12 +28639,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Bio_Association.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -28710,14 +28717,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Bio_Association.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Bio_Association.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -28727,7 +28734,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -28748,7 +28755,7 @@ router.get("/Bio_Association_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -28853,12 +28860,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Complaints.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -28931,14 +28938,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Complaints.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Complaints.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -28948,7 +28955,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -28969,7 +28976,7 @@ router.get("/Complaints_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -29073,8 +29080,8 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             if (!title) {
                 return res
                     .status(400)
@@ -29090,7 +29097,7 @@ router.post(
                         $push: {
                             "img_data.pdf_path": {
                                 title: title,
-                                pdf_path1: path,
+                                pdf_path1: filename,
                                 pdf_mimetype1: mimetype,
                                 value: true,
                             },
@@ -29108,7 +29115,7 @@ router.post(
                         $set: {
                             "img_data.pdf_path": {
                                 title: title,
-                                pdf_path1: path,
+                                pdf_path1: filename,
                                 pdf_mimetype1: mimetype,
                                 value: true,
                             },
@@ -29123,7 +29130,7 @@ router.post(
 
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous notice, there is only a limit of 5");
 
             }
@@ -29211,14 +29218,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Stud_Hostel.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Stud_Hostel.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -29228,7 +29235,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -29249,7 +29256,7 @@ router.get("/Stud_Hostel_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -29354,12 +29361,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await IQAC.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -29432,14 +29439,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await IQAC.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await IQAC.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -29449,7 +29456,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -29470,7 +29477,7 @@ router.get("/IQAC_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -29575,12 +29582,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Studentact.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -29653,14 +29660,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Studentact.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Studentact.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -29670,7 +29677,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -29691,7 +29698,7 @@ router.get("/Studentact_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -29797,12 +29804,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Vidyavistar.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -29875,14 +29882,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Vidyavistar.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Vidyavistar.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -29892,7 +29899,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -29913,7 +29920,7 @@ router.get("/Vidyavistar_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -30019,12 +30026,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Bot_Association.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -30097,14 +30104,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Bot_Association.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Bot_Association.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -30114,7 +30121,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -30135,7 +30142,7 @@ router.get("/Bot_Association_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -30160,11 +30167,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Eco_ProgramOffered({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -30279,12 +30286,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Eco_Awards.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -30357,14 +30364,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Eco_Awards.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Eco_Awards.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -30374,7 +30381,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -30395,7 +30402,7 @@ router.get("/Eco_Awards_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -30421,11 +30428,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Eng_ProgramOffered({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -30540,12 +30547,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Eng_Awards.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -30618,14 +30625,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Eng_Awards.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Eng_Awards.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -30635,7 +30642,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -30656,7 +30663,7 @@ router.get("/Eng_Awards_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -30682,11 +30689,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Hin_ProgramOffered({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -30801,12 +30808,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Hin_Awards.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -30879,14 +30886,14 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const dat = await Hin_Awards.findOne({ _id: req.params.id })
             const arr = dat.img_data.file_path;
             if (arr.length <= 4) {
                 const data = await Hin_Awards.findOneAndUpdate({ _id: req.params.id }, {
                     $push: {
                         "img_data.file_path": {
-                            file_path1: path,
+                            file_path1: filename,
                             file_mimetype1: mimetype,
                         },
                     },
@@ -30896,7 +30903,7 @@ router.post(
                     res.status(200).send("file uploaded successfully.");
                 }
             } else {
-                deleteFile(path);
+                deleteFile(filename);
                 res.status(402).send("Delete previous Images there is only a limit of 6 images");
             }
         } catch (error) {
@@ -30917,7 +30924,7 @@ router.get("/Hin_Awards_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -30942,11 +30949,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Hin_Magazine({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -31005,12 +31012,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Events_and_Activities.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -31066,10 +31073,10 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Events_and_Activities({
                 title: title,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -31087,7 +31094,7 @@ router.get("/Events_and_Activities_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -31128,12 +31135,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Bio_Faculty.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -31159,12 +31166,12 @@ router.post(
     async (req, res) => {
         try {
             const { title, description, filter } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Bio_Faculty({
                 title: title,
                 description: description,
                 filter: filter,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -31182,7 +31189,7 @@ router.get("/bio_faculty_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -31223,12 +31230,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Hin_Faculty.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -31254,12 +31261,12 @@ router.post(
     async (req, res) => {
         try {
             const { title, description, filter } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Hin_Faculty({
                 title: title,
                 description: description,
                 filter: filter,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -31277,7 +31284,7 @@ router.get("/hin_faculty_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -31317,12 +31324,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Eng_Faculty.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -31348,12 +31355,12 @@ router.post(
     async (req, res) => {
         try {
             const { title, description, filter } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Eng_Faculty({
                 title: title,
                 description: description,
                 filter: filter,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -31371,7 +31378,7 @@ router.get("/eng_faculty_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -31411,12 +31418,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await philo_Faculty.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -31442,12 +31449,12 @@ router.post(
     async (req, res) => {
         try {
             const { title, description, filter } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new philo_Faculty({
                 title: title,
                 description: description,
                 filter: filter,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -31465,7 +31472,7 @@ router.get("/philo_faculty_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -31506,12 +31513,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await NHE_Faculty.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -31537,12 +31544,12 @@ router.post(
     async (req, res) => {
         try {
             const { title, description, filter } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new NHE_Faculty({
                 title: title,
                 description: description,
                 filter: filter,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -31560,7 +31567,7 @@ router.get("/NHE_faculty_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -31602,12 +31609,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Music_Faculty.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -31633,12 +31640,12 @@ router.post(
     async (req, res) => {
         try {
             const { title, description, filter } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Music_Faculty({
                 title: title,
                 description: description,
                 filter: filter,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -31656,7 +31663,7 @@ router.get("/Music_faculty_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -31696,12 +31703,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Eco_Faculty.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -31727,12 +31734,12 @@ router.post(
     async (req, res) => {
         try {
             const { title, description, filter } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Eco_Faculty({
                 title: title,
                 description: description,
                 filter: filter,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -31750,7 +31757,7 @@ router.get("/eco_faculty_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -31790,12 +31797,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Chem_Faculty.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -31821,12 +31828,12 @@ router.post(
     async (req, res) => {
         try {
             const { title, description, filter } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Chem_Faculty({
                 title: title,
                 description: description,
                 filter: filter,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -31844,7 +31851,7 @@ router.get("/chem_faculty_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -31884,12 +31891,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Bot_Faculty.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -31915,12 +31922,12 @@ router.post(
     async (req, res) => {
         try {
             const { title, description, filter } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Bot_Faculty({
                 title: title,
                 description: description,
                 filter: filter,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -31938,7 +31945,7 @@ router.get("/bot_faculty_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -31974,13 +31981,13 @@ router.post(
         try {
 
             const { title, description, DOJ } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
 
             const file = new Bot_Lab_Staff({
                 title: title,
                 description: description,
                 DOJ: DOJ,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
             });
             await file.save();
             res.send("file uploaded successfully.");
@@ -31997,7 +32004,7 @@ router.get("/bot_Lab_faculty_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -32038,12 +32045,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Hist_Faculty.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -32069,12 +32076,12 @@ router.post(
     async (req, res) => {
         try {
             const { title, description, filter } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Hist_Faculty({
                 title: title,
                 description: description,
                 filter: filter,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -32092,7 +32099,7 @@ router.get("/Hist_faculty_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -32132,12 +32139,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Math_Faculty.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -32163,12 +32170,12 @@ router.post(
     async (req, res) => {
         try {
             const { title, description, filter } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Math_Faculty({
                 title: title,
                 description: description,
                 filter: filter,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -32186,7 +32193,7 @@ router.get("/Math_faculty_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -32227,12 +32234,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Physics_Faculty.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -32258,12 +32265,12 @@ router.post(
     async (req, res) => {
         try {
             const { title, description, filter } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Physics_Faculty({
                 title: title,
                 description: description,
                 filter: filter,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -32281,7 +32288,7 @@ router.get("/Physics_fac_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -32323,12 +32330,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Political_Science_Faculty.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -32354,12 +32361,12 @@ router.post(
     async (req, res) => {
         try {
             const { title, description, filter } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Political_Science_Faculty({
                 title: title,
                 description: description,
                 filter: filter,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -32377,7 +32384,7 @@ router.get("/Political_Science_Faculty_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -32417,12 +32424,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Psychology_Faculty.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -32448,12 +32455,12 @@ router.post(
     async (req, res) => {
         try {
             const { title, description, filter } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Psychology_Faculty({
                 title: title,
                 description: description,
                 filter: filter,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -32471,7 +32478,7 @@ router.get("/Psychology_Faculty_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -32511,12 +32518,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Zoology_Faculty.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -32542,12 +32549,12 @@ router.post(
     async (req, res) => {
         try {
             const { title, description, filter } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Zoology_Faculty({
                 title: title,
                 description: description,
                 filter: filter,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -32565,7 +32572,7 @@ router.get("/Zoology_Faculty_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -32605,9 +32612,9 @@ router.get("/Zoology_Faculty_download/:id", async (req, res) => {
 //     upload.single('file'),
 //     async(req, res) => {
 //         try {
-//             const { path, mimetype } = req.file;
-//             // console.log(path, mimetype)
-//             const data = await Sanskrit_Faculty.findOneAndUpdate({ _id: req.params.id }, { $set: { "img_data.pdf_path": { pdf_path1: path, pdf_mimetype1: mimetype, value: true } } })
+//             const { filename, mimetype } = req.file;
+//             // console.log(filename, mimetype)
+//             const data = await Sanskrit_Faculty.findOneAndUpdate({ _id: req.params.id }, { $set: { "img_data.pdf_path": { pdf_path1: filename, pdf_mimetype1: mimetype, value: true } } })
 //             if (data) {
 //                 // console.log(dat)
 //                 res.status(200).send('file uploaded successfully.');
@@ -32629,12 +32636,12 @@ router.get("/Zoology_Faculty_download/:id", async (req, res) => {
 //     async(req, res) => {
 //         try {
 //             const { title, description, filter } = req.body
-//             const { path, mimetype } = req.file
+//             const { filename, mimetype } = req.file
 //             const file = new Sanskrit_Faculty({
 //                 title: title,
 //                 description: description,
 //                 filter: filter,
-//                 "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+//                 "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
 //                 "img_data.pdf_path": { value: false }
 //             });
 //             await file.save();
@@ -32652,7 +32659,7 @@ router.get("/Zoology_Faculty_download/:id", async (req, res) => {
 //         res.set({
 //             'Content-Type': file.file_mimetype
 //         });
-//         res.sendFile(path.join(__dirname, '..', file.file_path));
+//         res.sendFile(filename.join(__dirname, '..', file.file_path));
 //     } catch (error) {
 //         res.status(400).send('Error while downloading file. Try again later.');
 //     }
@@ -32693,12 +32700,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            console.log(path, mimetype);
+            const { filename, mimetype } = req.file;
+            console.log(filename, mimetype);
             const data = await Com_Faculty.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -32724,12 +32731,12 @@ router.post(
     async (req, res) => {
         try {
             const { title, description, filter } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Com_Faculty({
                 title: title,
                 description: description,
                 filter: filter,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -32747,7 +32754,7 @@ router.get("/com_faculty_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -32779,11 +32786,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, description } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Publications({
                 title,
                 description,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -32805,7 +32812,7 @@ router.get("/Publications_res_download/:id", async (req, res) => {
         res.set({
             "Content-Type": file.file_mimetype,
         });
-        res.sendFile(path.join(__dirname, "..", file.file_path));
+
     } catch (error) {
         res.status(400).send("Error while downloading file. Try again later.");
     }
@@ -32830,11 +32837,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Library({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
@@ -32890,12 +32897,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Bio_Evetns.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -32922,12 +32929,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetype } = req.file;
-            // console.log(title,path,mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(title,filename,mimetype)
             const file = new Bio_Evetns({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -32979,12 +32986,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Botany_Events.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -33011,12 +33018,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetype } = req.file;
-            // console.log(title,path,mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(title,filename,mimetype)
             const file = new Botany_Events({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -33067,12 +33074,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Music_Events.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -33099,12 +33106,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetype } = req.file;
-            // console.log(title,path,mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(title,filename,mimetype)
             const file = new Music_Events({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -33156,12 +33163,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await NHE_Events.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -33188,12 +33195,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetype } = req.file;
-            // console.log(title,path,mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(title,filename,mimetype)
             const file = new NHE_Events({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -33245,12 +33252,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Philo_Events.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -33277,12 +33284,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetype } = req.file;
-            // console.log(title,path,mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(title,filename,mimetype)
             const file = new Philo_Events({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -33334,12 +33341,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await PE_Events.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -33366,12 +33373,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetype } = req.file;
-            // console.log(title,path,mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(title,filename,mimetype)
             const file = new PE_Events({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -33423,12 +33430,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetyPsychology } = req.file;
-            // console.log(path, mimetyPsychology)
+            const { filename, mimetyPsychology } = req.file;
+            // console.log(filename, mimetyPsychology)
             const data = await Psychology_Events.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetyPsychology1: mimetyPsychology,
                         value: true,
                     },
@@ -33455,12 +33462,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetyPsychology } = req.file;
-            // console.log(title,path,mimetyPsychology)
+            const { filename, mimetyPsychology } = req.file;
+            // console.log(title,filename,mimetyPsychology)
             const file = new Psychology_Events({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetyPsychology1: mimetyPsychology },
+                "img_data.file_path": { file_path1: filename, file_mimetyPsychology1: mimetyPsychology },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -33513,12 +33520,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Math_Events.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -33545,12 +33552,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetype } = req.file;
-            // console.log(title,path,mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(title,filename,mimetype)
             const file = new Math_Events({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -33603,12 +33610,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Eco_Events.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -33635,12 +33642,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetype } = req.file;
-            // console.log(title,path,mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(title,filename,mimetype)
             const file = new Eco_Events({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -33692,12 +33699,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetyPhy } = req.file;
-            // console.log(path, mimetyPhy)
+            const { filename, mimetyPhy } = req.file;
+            // console.log(filename, mimetyPhy)
             const data = await Phy_Events.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetyPhy1: mimetyPhy,
                         value: true,
                     },
@@ -33724,12 +33731,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetyPhy } = req.file;
-            // console.log(title,path,mimetyPhy)
+            const { filename, mimetyPhy } = req.file;
+            // console.log(title,filename,mimetyPhy)
             const file = new Phy_Events({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetyPhy1: mimetyPhy },
+                "img_data.file_path": { file_path1: filename, file_mimetyPhy1: mimetyPhy },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -33782,12 +33789,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Hin_Events.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -33814,12 +33821,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetype } = req.file;
-            // console.log(title,path,mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(title,filename,mimetype)
             const file = new Hin_Events({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -33871,12 +33878,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await His_Events.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -33903,12 +33910,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetype } = req.file;
-            // console.log(title,path,mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(title,filename,mimetype)
             const file = new His_Events({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -33961,12 +33968,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Com_Events.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -33993,12 +34000,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetype } = req.file;
-            // console.log(title,path,mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(title,filename,mimetype)
             const file = new Com_Events({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -34050,12 +34057,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Eng_Events.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -34082,12 +34089,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetype } = req.file;
-            // console.log(title,path,mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(title,filename,mimetype)
             const file = new Eng_Events({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -34140,12 +34147,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Com_Events.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -34172,12 +34179,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetype } = req.file;
-            // console.log(title,path,mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(title,filename,mimetype)
             const file = new Com_Events({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -34230,12 +34237,12 @@ router.post(
     upload.single("file"),
     async (req, res) => {
         try {
-            const { path, mimetype } = req.file;
-            // console.log(path, mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(filename, mimetype)
             const data = await Chem_Events.findOneAndUpdate({ _id: req.params.id }, {
                 $set: {
                     "img_data.pdf_path": {
-                        pdf_path1: path,
+                        pdf_path1: filename,
                         pdf_mimetype1: mimetype,
                         value: true,
                     },
@@ -34262,12 +34269,12 @@ router.post(
     async (req, res) => {
         try {
             const { title } = req.body;
-            const { path, mimetype } = req.file;
-            // console.log(title,path,mimetype)
+            const { filename, mimetype } = req.file;
+            // console.log(title,filename,mimetype)
             const file = new Chem_Events({
                 title: title,
                 // description: description,
-                "img_data.file_path": { file_path1: path, file_mimetype1: mimetype },
+                "img_data.file_path": { file_path1: filename, file_mimetype1: mimetype },
                 "img_data.pdf_path": { value: false },
             });
             await file.save();
@@ -34308,11 +34315,11 @@ router.post(
     async (req, res) => {
         try {
             const { title, link } = req.body;
-            const { path, mimetype } = req.file;
+            const { filename, mimetype } = req.file;
             const file = new Soc({
                 title,
                 link,
-                file_path: path,
+                file_path: filename,
                 file_mimetype: mimetype,
             });
             await file.save();
